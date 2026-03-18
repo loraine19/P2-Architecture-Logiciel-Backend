@@ -10,5 +10,17 @@ services:
       - '3306'
     volumes:
       - db_data:/var/lib/mysql
+  phpmyadmin:
+    image: phpmyadmin
+    container_name: phpmyadmin
+    links:
+      - mysql
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+    ports:
+      - 8081:80
+    depends_on:
+      - mysql
 volumes:
   db_data:
