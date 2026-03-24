@@ -11,7 +11,7 @@
 
 ## Étape 2 - Corrigez l'API d'authentification (Back-end) 🛠️
 
-- [ ] Identifier l'endpoint d'authentification `/api/login`.
+- [x] Identifier l'endpoint d'authentification `/api/login`.
 - [ ] Déboguer la méthode `login` dans `UserService.java` via des points d'arrêt.
 - [ ] Implémenter le service `JWTService.java` pour la délivrance du token.
 - [ ] Garantir que l'API retourne un token JWT valide en cas de succès.

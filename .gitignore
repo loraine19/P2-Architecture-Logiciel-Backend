@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Environnement de développement ###
+.env
