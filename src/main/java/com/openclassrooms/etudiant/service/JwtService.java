@@ -1,33 +1,34 @@
 package com.openclassrooms.etudiant.service;
 
-import java.sql.Date;
-
-import javax.crypto.SecretKey;
-
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.security.Keys;
+import javax.crypto.SecretKey;
+import java.util.Date;
 
 @Service
 public class JwtService {
 
-    // Inject JWT properties from application.properties or .env
+    /* JWT CONFIGURATION */
     @Value("${JWT_SECRET}")
     private String jwtSecret;
 
     @Value("${JWT_EXPIRATION_MS}")
-    private int jwtExpirationMs;
+    private long jwtExpirationMs;
 
+    /* GET SIGNING KEY */
+    private SecretKey getSigningKey() {
+        byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
+        return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    /* GENERATE TOKEN */
     public String generateToken(UserDetails userDetails) {
-        // Test to see if the properties are correctly injected
-        System.out.println("jwtSecret : " + jwtSecret);
-        System.out.println("jwtExpirationMs : " + jwtExpirationMs);
-
-        // Generate JWT token using Jwts builder
         return Jwts.builder()
                 .subject(userDetails.getUsername())
                 .issuedAt(new Date(System.currentTimeMillis()))
@@ -36,8 +37,30 @@ public class JwtService {
                 .compact();
     }
 
-    private SecretKey getSigningKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
-        return Keys.hmacShaKeyFor(keyBytes);
+    /* VALIDATE TOKEN */
+
+    /* Extract all claims from JWT token */
+    private Claims extractAllClaims(String token) {
+        return Jwts.parser()
+                .verifyWith(getSigningKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+    }
+
+    /* Extract username (subject) from JWT token */
+    public String extractUsername(String token) {
+        return extractAllClaims(token).getSubject();
+    }
+
+    /* Validate token if it belongs to the user and is not expired */
+    public boolean isTokenValid(String token, UserDetails userDetails) {
+        final String username = extractUsername(token);
+        return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
+    }
+
+    /* Check if token expiration date is before current time */
+    private boolean isTokenExpired(String token) {
+        return extractAllClaims(token).getExpiration().before(new Date());
     }
 }
