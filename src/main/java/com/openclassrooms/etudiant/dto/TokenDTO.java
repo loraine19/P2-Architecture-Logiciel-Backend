@@ -1,14 +1,12 @@
 package com.openclassrooms.etudiant.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
-public class LoginRequestDTO {
-
+@AllArgsConstructor
+public class TokenDTO {
     @NotBlank
-    private String login;
-    @NotBlank
-    private String password;
-
+    private String token;
 }

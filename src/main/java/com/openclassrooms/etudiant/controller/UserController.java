@@ -2,6 +2,7 @@ package com.openclassrooms.etudiant.controller;
 
 import com.openclassrooms.etudiant.dto.LoginRequestDTO;
 import com.openclassrooms.etudiant.dto.RegisterDTO;
+import com.openclassrooms.etudiant.dto.TokenDTO;
 import com.openclassrooms.etudiant.mapper.UserDtoMapper;
 import com.openclassrooms.etudiant.service.UserService;
 import jakarta.validation.Valid;
@@ -29,8 +30,9 @@ public class UserController {
 
     @PostMapping("/api/login")
     // added @RequestBody to login method
+    // added return type ResponseEntity<?> to login method & DTO TokenDTO
     public ResponseEntity<?> login(@RequestBody LoginRequestDTO loginRequestDTO) {
-        String jwtToken = userService.login(loginRequestDTO.getLogin(), loginRequestDTO.getPassword());
+        TokenDTO jwtToken = userService.login(loginRequestDTO.getLogin(), loginRequestDTO.getPassword());
         return ResponseEntity.ok(jwtToken);
     }
 

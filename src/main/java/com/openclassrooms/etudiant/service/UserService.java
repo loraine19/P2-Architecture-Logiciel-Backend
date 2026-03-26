@@ -1,5 +1,6 @@
 package com.openclassrooms.etudiant.service;
 
+import com.openclassrooms.etudiant.dto.TokenDTO;
 import com.openclassrooms.etudiant.entities.User;
 import com.openclassrooms.etudiant.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -33,16 +34,15 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public String login(String login, String password) {
+    public TokenDTO login(String login, String password) {
         Assert.notNull(login, "Login must not be null..");
         Assert.notNull(password, "Password must not be null");
         Optional<User> user = userRepository.findByLogin(login);
-        // add user.isPresent() to log
         log.info("User found: " + user.isPresent());
         if (user.isPresent() && passwordEncoder.matches(password, user.get().getPassword())) {
             // test remove user constructor UserDetails userDetails =
-            // org.springframework.security.core.userdetails.User.builder().username(login).build();
-            return jwtService.generateToken(user.get());
+            org.springframework.security.core.userdetails.User.builder().username(login).build();
+            return new TokenDTO(jwtService.generateToken(user.get()));
         } else {
             throw new IllegalArgumentException("Invalid credentials");
         }
