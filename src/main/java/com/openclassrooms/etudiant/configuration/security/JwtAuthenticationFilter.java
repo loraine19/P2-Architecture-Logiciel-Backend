@@ -30,23 +30,49 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain) throws ServletException, IOException {
 
-        System.out.println("🔐 JWT Filter: Processing request for " + request.getRequestURI());
+        String requestURI = request.getRequestURI();
+        System.out.println("🔐 JWT Filter: Processing request for " + requestURI);
 
-        /* Check if header is missing or wrong format */
-        final String authHeader = request.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            System.out.println("❌ JWT Filter: No valid Authorization header found - skipping authentication");
+        // Skip JWT processing for public endpoints
+        if (isPublicEndpoint(requestURI)) {
+            System.out.println("🔓 JWT Filter: Public endpoint detected - skipping JWT processing");
             filterChain.doFilter(request, response);
             return;
         }
 
-        /* Extract token and username */
-        System.out.println("📝 JWT Filter: Found Bearer token, extracting...");
-        final String jwt = authHeader.substring(7);
-        final String userLogin = jwtService.extractUsername(jwt);
-        System.out.println("👤 JWT Filter: Extracted username: " + userLogin);
+        String jwt = jwtService.getJwtFromCookies(request);
+        if (jwt == null) {
+            System.out.println("❌ JWT Filter: No JWT token found in cookies");
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // Additional safety check for malformed tokens
+        if (jwt.isEmpty() || !jwt.contains(".")) {
+            System.out.println("❌ JWT Filter: Malformed or empty JWT token found");
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        /*
+         * Check if header is missing or wrong format
+         * final String authHeader = request.getHeader("Authorization");
+         * if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+         * if (request.getRequestURI().equals("/api/login"))
+         * System.out.
+         * println("🔐 JWT Filter: Login endpoint accessed - skipping authentication");
+         * else
+         * System.out.
+         * println("❌ JWT Filter: No valid Authorization header found - skipping authentication"
+         * );
+         * filterChain.doFilter(request, response);
+         * return;
+         * }
+         */
 
         /* Check if user is not already authenticated */
+        String userLogin = jwtService.extractUsername(jwt);
+        System.out.println("🔍 JWT Filter: Extracted username from token: " + userLogin);
         if (userLogin != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             System.out.println("🔍 JWT Filter: User not authenticated, loading user details...");
 
@@ -74,5 +100,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         /* Pass to the next filter */
         System.out.println("➡️ JWT Filter: Passing request to next filter in chain");
         filterChain.doFilter(request, response);
+    }
+
+    /**
+     * Check if the request URI is for a public endpoint that doesn't require
+     * authentication
+     */
+    private boolean isPublicEndpoint(String requestURI) {
+        return requestURI.equals("/api/register") ||
+                requestURI.equals("/api/login") ||
+                requestURI.startsWith("/actuator/");
     }
 }

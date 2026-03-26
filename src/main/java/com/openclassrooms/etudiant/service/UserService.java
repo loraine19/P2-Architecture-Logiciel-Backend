@@ -1,6 +1,6 @@
 package com.openclassrooms.etudiant.service;
 
-import com.openclassrooms.etudiant.dto.TokenDTO;
+import com.openclassrooms.etudiant.dto.AuthDTO;
 import com.openclassrooms.etudiant.entities.User;
 import com.openclassrooms.etudiant.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -34,15 +34,19 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public TokenDTO login(String login, String password) {
+    public AuthDTO login(String login, String password) {
+        System.out.println("userService data: " + login + " " + password);
         Assert.notNull(login, "Login must not be null..");
         Assert.notNull(password, "Password must not be null");
         Optional<User> user = userRepository.findByLogin(login);
-        log.info("User found: " + user.isPresent());
+        log.info("User found: " + user);
         if (user.isPresent() && passwordEncoder.matches(password, user.get().getPassword())) {
-            // test remove user constructor UserDetails userDetails =
-            org.springframework.security.core.userdetails.User.builder().username(login).build();
-            return new TokenDTO(jwtService.generateToken(user.get()));
+            UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
+                    .username(user.get().getLogin())
+                    .password(user.get().getPassword())
+                    .authorities("USER")
+                    .build();
+            return new AuthDTO(true, jwtService.generateToken(userDetails));
         } else {
             throw new IllegalArgumentException("Invalid credentials");
         }
