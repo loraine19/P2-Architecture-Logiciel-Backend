@@ -1,4 +1,6 @@
-package com.openclassrooms.etudiant.dto;
+package com.openclassrooms.etudiant.entities;
+
+import org.springframework.http.ResponseEntity;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -6,7 +8,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class AuthDTO {
+public class Auth {
     @NotBlank
     private Boolean isAuthenticated;
     @NotBlank

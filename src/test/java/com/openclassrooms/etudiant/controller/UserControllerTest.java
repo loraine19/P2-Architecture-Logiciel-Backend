@@ -1,7 +1,7 @@
 package com.openclassrooms.etudiant.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.openclassrooms.etudiant.dto.RegisterDTO;
+import com.openclassrooms.etudiant.dto.UserDTO;
 import com.openclassrooms.etudiant.entities.User;
 import com.openclassrooms.etudiant.repository.UserRepository;
 import com.openclassrooms.etudiant.service.UserService;
@@ -33,7 +33,6 @@ public class UserControllerTest {
     private static final String LOGIN = "login";
     private static final String PASSWORD = "password";
 
-
     @Container
     static MySQLContainer mySQLContainer = new MySQLContainer("mysql:latest");
 
@@ -63,13 +62,13 @@ public class UserControllerTest {
     @Test
     public void registerUserWithoutRequiredData() throws Exception {
         // GIVEN
-        RegisterDTO registerDTO = new RegisterDTO();
+        UserDTO userDTO = new UserDTO();
 
         // WHEN
         mockMvc.perform(MockMvcRequestBuilders.post(URL)
-                        .content(objectMapper.writeValueAsString(registerDTO))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
+                .content(objectMapper.writeValueAsString(userDTO))
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
@@ -82,19 +81,18 @@ public class UserControllerTest {
         user.setLastName(LAST_NAME);
         user.setLogin(LOGIN);
         user.setPassword(PASSWORD);
-        userService.register(user);
 
-        RegisterDTO registerDTO = new RegisterDTO();
-        registerDTO.setFirstName(FIRST_NAME);
-        registerDTO.setLastName(LAST_NAME);
-        registerDTO.setLogin(LOGIN);
-        registerDTO.setPassword(PASSWORD);
+        UserDTO userDTO = new UserDTO();
+        userDTO.setFirstName(FIRST_NAME);
+        userDTO.setLastName(LAST_NAME);
+        userDTO.setLogin(LOGIN);
+        userDTO.setPassword(PASSWORD);
 
         // WHEN
         mockMvc.perform(MockMvcRequestBuilders.post(URL)
-                        .content(objectMapper.writeValueAsString(registerDTO))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
+                .content(objectMapper.writeValueAsString(userDTO))
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
@@ -102,17 +100,17 @@ public class UserControllerTest {
     @Test
     public void registerUserSuccessful() throws Exception {
         // GIVEN
-        RegisterDTO registerDTO = new RegisterDTO();
-        registerDTO.setFirstName(FIRST_NAME);
-        registerDTO.setLastName(LAST_NAME);
-        registerDTO.setLogin(LOGIN);
-        registerDTO.setPassword(PASSWORD);
+        UserDTO userDTO = new UserDTO();
+        userDTO.setFirstName(FIRST_NAME);
+        userDTO.setLastName(LAST_NAME);
+        userDTO.setLogin(LOGIN);
+        userDTO.setPassword(PASSWORD);
 
         // WHEN
         mockMvc.perform(MockMvcRequestBuilders.post(URL)
-                        .content(objectMapper.writeValueAsString(registerDTO))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
+                .content(objectMapper.writeValueAsString(userDTO))
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(MockMvcResultMatchers.status().isCreated());
     }

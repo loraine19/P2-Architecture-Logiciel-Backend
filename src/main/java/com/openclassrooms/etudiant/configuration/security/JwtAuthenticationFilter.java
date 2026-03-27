@@ -31,7 +31,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain) throws ServletException, IOException {
 
         String requestURI = request.getRequestURI();
-        System.out.println("🔐 JWT Filter: Processing request for " + requestURI);
 
         // Skip JWT processing for public endpoints
         if (isPublicEndpoint(requestURI)) {
@@ -55,6 +54,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         /*
+         * NOT USED FOR COOKIE-BASED AUTH, BUT CAN BE REACTIVATED IF NEEDED
          * Check if header is missing or wrong format
          * final String authHeader = request.getHeader("Authorization");
          * if (authHeader == null || !authHeader.startsWith("Bearer ")) {

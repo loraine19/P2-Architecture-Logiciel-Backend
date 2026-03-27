@@ -20,21 +20,22 @@
 
 ## Étape 3 - Implémentez l'interface d'authentification (Front-end) 🖥️
 
-- [ ] Créer le composant `login` et sa route dédiée.
-- [ ] Développer le formulaire (champs login et mot de passe).
-- [ ] Créer le service Angular pour consommer l'API `/api/login`.
-- [ ] Assurer la réception et la gestion du token d'authentification.
-- [ ] Gérer les états de l'interface : chargement, erreurs serveur et succès.
+- [x] Créer le composant `login` et sa route dédiée.
+- [x] Développer le formulaire (champs login et mot de passe).
+- [x] Créer le service Angular pour consommer l'API `/api/login`.
+- [x]Assurer la réception et la gestion du token d'authentification.
+- [x] Gérer les états de l'interface : chargement, erreurs serveur et succès.
 
 ## Étape 4 - Ajoutez de nouvelles fonctionnalités (Back-end) 🏗️
 
-- [ ] Implémenter les APIs CRUD pour la gestion des étudiants (Ajout, Liste, Détail, Modif, Suppression).
-- [ ] Sécuriser les APIs : accès réservé aux utilisateurs authentifiés via **Bearer Token**.
-- [ ] Maintenir l'architecture : entrées/sorties via Controller, logique via Service, données via Repository.
-- [ ] Tester chaque endpoint avec Postman.
+-[x] Implémenter les APIs CRUD pour la gestion des étudiants (Ajout, Liste, Détail, Modif, Suppression).
+
+- [x] Sécuriser les APIs : accès réservé aux utilisateurs authentifiés via **Bearer Token COKKIES HTTP ONLY **.
+- [x] Maintenir l'architecture : entrées/sorties via Controller, logique via Service, données via Repository.
+- [x] Tester chaque endpoint avec Postman.
 
 ## Étape 5 - Implémentez les écrans (Front-end) 🎨
 
-- [ ] Développer les vues Angular pour toutes les opérations CRUD des étudiants.
+- [x] Développer les vues Angular pour toutes les opérations CRUD des étudiants.
 - [ ] Sécuriser l'accès aux écrans à l'aide de **Guards** Angular.
-- [ ] Créer les services Angular pour appeler les nouvelles APIs
+- [x] Créer les services Angular pour appeler les nouvelles APIs
