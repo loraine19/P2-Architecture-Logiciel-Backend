@@ -18,7 +18,9 @@ public class StudentService implements StudentServiceInterface {
     private final StudentRepository studentRepository;
 
     public List<Student> getAllStudents() {
-        return studentRepository.findAll();
+        List<Student> students = studentRepository.findAll();
+        System.out.println(students);
+        return students;
     }
 
     public Student getStudentById(Long id) {

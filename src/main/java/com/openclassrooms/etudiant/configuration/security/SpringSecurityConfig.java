@@ -62,7 +62,7 @@ public class SpringSecurityConfig {
                 /* Define which routes are public or protected */
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/actuator/**").permitAll()
-                        .requestMatchers("/api/register", "/api/login").permitAll()
+                        .requestMatchers("/api/register", "/api/login", "/login", "/register").permitAll()
                         .anyRequest().authenticated())
 
                 /* Plug our JWT filter before the standard login filter */
