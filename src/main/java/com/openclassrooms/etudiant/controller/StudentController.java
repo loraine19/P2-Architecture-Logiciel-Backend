@@ -4,7 +4,9 @@ import com.openclassrooms.etudiant.dto.StudentDTO;
 import com.openclassrooms.etudiant.entities.Student;
 import com.openclassrooms.etudiant.mapper.StudentDtoMapper;
 import com.openclassrooms.etudiant.service.StudentService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,9 +14,14 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * REST controller for student management
+ * Handles CRUD operations for students
+ */
 @RestController
 @RequestMapping("/api/students")
 @RequiredArgsConstructor
+@Slf4j
 public class StudentController {
 
     private final StudentService studentService;
@@ -22,38 +29,49 @@ public class StudentController {
 
     @GetMapping
     public ResponseEntity<List<StudentDTO>> getAllStudents() {
+        log.debug("Getting all students");
         List<StudentDTO> students = studentService.getAllStudents()
                 .stream()
                 .map(studentMapper::toDto)
                 .collect(Collectors.toList());
+        log.debug("Found {} students", students.size());
         return ResponseEntity.ok(students);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<StudentDTO> getStudentById(@PathVariable Long id) {
+        log.debug("Getting student with id: {}", id);
         Student student = studentService.getStudentById(id);
         return ResponseEntity.ok(studentMapper.toDto(student));
     }
 
     @PostMapping
-    public ResponseEntity<StudentDTO> createStudent(@RequestBody StudentDTO studentDTO) {
+    public ResponseEntity<StudentDTO> createStudent(@Valid @RequestBody StudentDTO studentDTO) {
+        log.debug("Creating new student: {}", studentDTO.getFirstName() + " " + studentDTO.getLastName());
         Student studentRequest = studentMapper.toEntity(studentDTO);
         Student createdStudent = studentService.createStudent(studentRequest);
+        log.debug("Student created with id: {}", createdStudent.getId());
         return new ResponseEntity<>(studentMapper.toDto(createdStudent), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<StudentDTO> updateStudent(@PathVariable Long id, @RequestBody StudentDTO studentDTO) {
+    public ResponseEntity<StudentDTO> updateStudent(@PathVariable Long id, @Valid @RequestBody StudentDTO studentDTO) {
+        log.debug("Updating student with id: {}", id);
         Student studentRequest = studentMapper.toEntity(studentDTO);
+
+        // Check for ID mismatch - basic validation
         if (studentRequest.getId() != null && !studentRequest.getId().equals(id)) {
+            log.warn("ID mismatch: path={}, body={}", id, studentRequest.getId());
             return ResponseEntity.badRequest().build();
         }
+
         Student updatedStudent = studentService.updateStudent(id, studentRequest);
         return ResponseEntity.ok(studentMapper.toDto(updatedStudent));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteStudent(@PathVariable Long id) {
+        log.debug("Deleting student with id: {}", id);
         studentService.deleteStudent(id);
         return ResponseEntity.noContent().build();
     }

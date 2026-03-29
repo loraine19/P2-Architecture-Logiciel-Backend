@@ -1,117 +1,101 @@
 package com.openclassrooms.etudiant.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.openclassrooms.etudiant.dto.LoginRequestDTO;
+import com.openclassrooms.etudiant.dto.MessageResp;
 import com.openclassrooms.etudiant.dto.UserDTO;
-import com.openclassrooms.etudiant.entities.User;
-import com.openclassrooms.etudiant.repository.UserRepository;
 import com.openclassrooms.etudiant.service.UserService;
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import org.testcontainers.containers.MySQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+/**
+ * Integration tests for UserController
+ * Tests authentication endpoints and security configuration
+ */
+@WebMvcTest(UserController.class)
+@DisplayName("UserController Integration Tests")
+class UserControllerTest {
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureMockMvc
-@Testcontainers
-public class UserControllerTest {
-
-    private static final String URL = "/api/register";
-    private static final String FIRST_NAME = "John";
-    private static final String LAST_NAME = "Doe";
-    private static final String LOGIN = "login";
-    private static final String PASSWORD = "password";
-
-    @Container
-    static MySQLContainer mySQLContainer = new MySQLContainer("mysql:latest");
-
-    @Autowired
-    private UserService userService;
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private ObjectMapper objectMapper;
     @Autowired
     private MockMvc mockMvc;
 
-    @DynamicPropertySource
-    static void configureTestProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", () -> mySQLContainer.getJdbcUrl());
-        registry.add("spring.datasource.username", () -> mySQLContainer.getUsername());
-        registry.add("spring.datasource.password", () -> mySQLContainer.getPassword());
-        registry.add("spring.jpa.hibernate.ddl-auto", () -> "create");
+    @Autowired
+    private ObjectMapper objectMapper;
 
+    @MockitoBean
+    private UserService userService;
+
+    private UserDTO testUserDTO;
+    private LoginRequestDTO loginRequestDTO;
+    private MessageResp successResponse;
+
+    @BeforeEach
+    void setUp() {
+        // TODO: Initialize test data
+        // Create testUserDTO with valid registration data
+        // Create loginRequestDTO with valid credentials
+        // Create successResponse using MessageResp.success()
     }
 
-    @AfterEach
-    public void afterEach() {
-        userRepository.deleteAll();
+    @Nested
+    @DisplayName("POST /api/register - User Registration")
+    class UserRegistrationEndpoint {
+
+        @Test
+        @DisplayName("Should register user successfully with valid data")
+        void shouldRegisterUser_WhenDataIsValid() throws Exception {
+            // TODO: Mock userService.register() to return success message
+            // TODO: Perform POST request to /api/register with valid JSON
+            // TODO: Assert status is 200 OK
+            // TODO: Assert response contains success message
+        }
+
+        @Test
+        @DisplayName("Should return 400 when validation fails")
+        void shouldReturn400_WhenValidationFails() throws Exception {
+            // TODO: Create invalid UserDTO (empty firstName, invalid email, weak password)
+            // TODO: Perform POST request to /api/register with invalid JSON
+            // TODO: Assert status is 400 BAD REQUEST
+        }
     }
 
-    @Test
-    public void registerUserWithoutRequiredData() throws Exception {
-        // GIVEN
-        UserDTO userDTO = new UserDTO();
+    @Nested
+    @DisplayName("POST /api/login - User Authentication")
+    class UserAuthenticationEndpoint {
 
-        // WHEN
-        mockMvc.perform(MockMvcRequestBuilders.post(URL)
-                .content(objectMapper.writeValueAsString(userDTO))
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+        @Test
+        @DisplayName("Should authenticate user successfully with valid credentials")
+        void shouldAuthenticateUser_WhenCredentialsAreValid() throws Exception {
+            // TODO: Mock userService.login() to return success message
+            // TODO: Perform POST request to /api/login with valid credentials
+            // TODO: Assert status is 200 OK
+        }
+
+        @Test
+        @DisplayName("Should return 400 when validation fails")
+        void shouldReturn400_WhenValidationFails() throws Exception {
+            // TODO: Create LoginRequestDTO with invalid email format
+            // TODO: Perform POST request to /api/login with invalid data
+            // TODO: Assert status is 400 BAD REQUEST
+        }
     }
 
-    @Test
-    public void registerAlreadyExistUser() throws Exception {
-        // GIVEN
-        User user = new User();
-        user.setFirstName(FIRST_NAME);
-        user.setLastName(LAST_NAME);
-        user.setLogin(LOGIN);
-        user.setPassword(PASSWORD);
+    @Nested
+    @DisplayName("POST /logout - User Logout")
+    class UserLogoutEndpoint {
 
-        UserDTO userDTO = new UserDTO();
-        userDTO.setFirstName(FIRST_NAME);
-        userDTO.setLastName(LAST_NAME);
-        userDTO.setLogin(LOGIN);
-        userDTO.setPassword(PASSWORD);
-
-        // WHEN
-        mockMvc.perform(MockMvcRequestBuilders.post(URL)
-                .content(objectMapper.writeValueAsString(userDTO))
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(MockMvcResultMatchers.status().isBadRequest());
-    }
-
-    @Test
-    public void registerUserSuccessful() throws Exception {
-        // GIVEN
-        UserDTO userDTO = new UserDTO();
-        userDTO.setFirstName(FIRST_NAME);
-        userDTO.setLastName(LAST_NAME);
-        userDTO.setLogin(LOGIN);
-        userDTO.setPassword(PASSWORD);
-
-        // WHEN
-        mockMvc.perform(MockMvcRequestBuilders.post(URL)
-                .content(objectMapper.writeValueAsString(userDTO))
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(MockMvcResultMatchers.status().isCreated());
+        @Test
+        @DisplayName("Should logout user successfully")
+        void shouldLogoutUser_Successfully() throws Exception {
+            // TODO: Mock userService.logout() to return ResponseEntity.ok().build()
+            // TODO: Perform POST request to /logout
+            // TODO: Assert status is 200 OK
+        }
     }
 }

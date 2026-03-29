@@ -4,6 +4,9 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+# Notes de travail (ne pas versioner)
+.notes
+
 ### STS ###
 .apt_generated
 .classpath
@@ -34,3 +37,9 @@ build/
 
 ### Environnement de développement ###
 .env
+
+### Logs et processus ###
+logs/
+*.log
+pid.txt
+*.pid

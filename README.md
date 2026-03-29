@@ -15,18 +15,56 @@ Backend qui gère les APIs des utilisateurs de la bibliothèque et les CRUD des 
     -> Maven 3.9.3 (https://archive.apache.org/dist/maven/maven-3/3.9.3/binaries/) ou plus
 
 ## Démarrage du backend
-Pour démarrer le projet backend, il faut : 
+
+### 🚀 Méthode rapide (recommandée pour le développement)
+
+Nous avons créé des scripts simples pour faciliter le développement :
+
+```bash
+# Linux/Mac
+./server.sh        # Démarre le serveur avec rechargement automatique
+./server.sh stop   # Arrête le serveur
+./server.sh restart # Redémarre le serveur
+./server.sh status  # Vérifie le statut du serveur
+```
+
+```batch
+# Windows
+server.bat         # Démarre le serveur avec rechargement automatique
+server.bat stop    # Arrête le serveur
+server.bat restart # Redémarre le serveur
+server.bat status  # Vérifie le statut du serveur
+```
+
+```bash
+# Script universel (détecte l'OS automatiquement)
+./server           # Utilise le bon script selon votre OS
+```
+
+### ⚡ Fonctionnalités du mode développement
+
+- **Rechargement automatique** : Le serveur redémarre automatiquement quand vous modifiez le code
+- **DevTools activé** : Optimisations de développement incluses
+- **Hot reload** : Changements instantanés sur les classes, configs, templates
+
+### 🔧 Méthode manuelle traditionnelle
+
+Pour démarrer le projet backend manuellement, il faut :
+
 - avoir démarré Docker-Desktop sur votre poste de travail local.
 - dans une console, se placer à la racine du projet et exécuter la commande Maven suivante :
+
 ```
 mvn spring-boot:run
 ```
 
-Cette commande va : 
- - initialiser le container Docker qui contient la base de données 
- - lancer le serveur du backend et le connecter à la base de données précédemment créée
+Cette commande va :
 
-Les traces logs devraient ressemblées à ceci : 
+- initialiser le container Docker qui contient la base de données
+- lancer le serveur du backend et le connecter à la base de données précédemment créée
+
+Les traces logs devraient ressemblées à ceci :
+
 ```
 .   ____          _            __ _ _
 /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
@@ -76,38 +114,40 @@ Sur Docker-Desktop, vous devriez voir apparaître un container MySQL qui corresp
 
 ![1-docker-desktop](pictures/1-docker-desktop.png)
 
-Vous pouvez vous connecter à la base de données et vérifier que la table ```user``` a été créée automatiquement.
-Pour cela, cliquez sur le lien `mysql-1` ce qui vous amènera sur la vue complète de la base de données. 
-Dans l'onglet ```Exec```, il faut : 
+Vous pouvez vous connecter à la base de données et vérifier que la table `user` a été créée automatiquement.
+Pour cela, cliquez sur le lien `mysql-1` ce qui vous amènera sur la vue complète de la base de données.
+Dans l'onglet `Exec`, il faut :
 
 1. se connecter à la base de données. Tapez la commande ci-dessous
 
     ```
     mysql -u etudiant_db -p
     ```
-   L'invite de commande demandera le mot de passe. Il est identique au nom d'utilisateur, c'est-à-dire ```etudiant_db```.
 
+    L'invite de commande demandera le mot de passe. Il est identique au nom d'utilisateur, c'est-à-dire `etudiant_db`.
 
 2. Se connecter au schéma de base de données `etudiant_db`. Dans l'invite de commande, tapez la commande ci-dessous :
 
     ```
     use etudiant_db;
     ```
-  
+
 3. Vérifier que la table `user` existe (elle est néanmoins vide pour le moment).
 
     ```
     select * from user;
     ```
+
     Le résultat devrait être : `Empty set (0.00 sec)`
 
-La capture d'écran ci-dessous résume les étapes précédentes : 
+La capture d'écran ci-dessous résume les étapes précédentes :
 
 ![2-docker-desktop-bdd](pictures/2-docker-desktop-bdd.png)
 
-
 ## Exécution des tests
+
 Pour exécuter les tests Junit, il faut :
+
 - avoir démarré Docker-Desktop sur votre poste de travail local. Cette étape est nécessaire car les tests d'intégration auront besoin de Docker pour créer des bases de données temporaires de test.
 - dans une console, se placer à la racine du projet et exécuter la commande Maven suivante :
 
@@ -121,11 +161,8 @@ mvn clean test
     - API d'authentification d'un utilisateur (à faire)
     - APIs CRUD des étudiants de la bibliothèque (à faire)
 
-
 ## Écrans ou blocs concernés
+
     - Ecran xxx
     - Ecran xxx
     - Ecran xxx
-
-
-

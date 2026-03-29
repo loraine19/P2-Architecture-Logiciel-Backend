@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# Universal server script - detects OS and runs appropriate script
+# Usage: ./server [start|stop|restart|status]
+
+# Detect operating system
+if [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]] || [[ "$OS" == "Windows_NT" ]]; then
+    # Windows
+    exec ./server.bat "$@"
+else
+    # Unix-like (Linux, macOS, etc.)
+    exec ./server.sh "$@"
+fi

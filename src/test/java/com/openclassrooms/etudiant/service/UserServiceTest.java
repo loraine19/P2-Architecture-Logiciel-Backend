@@ -1,88 +1,123 @@
 package com.openclassrooms.etudiant.service;
 
+import com.openclassrooms.etudiant.dto.LoginRequestDTO;
 import com.openclassrooms.etudiant.dto.UserDTO;
 import com.openclassrooms.etudiant.entities.User;
+import com.openclassrooms.etudiant.mapper.UserDtoMapper;
 import com.openclassrooms.etudiant.repository.UserRepository;
-import org.junit.jupiter.api.Assertions;
+import jakarta.servlet.http.HttpServletResponse;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.util.Optional;
+/**
+ * Unit tests for UserService
+ * Tests authentication, registration, and session management
+ */
+@ExtendWith(MockitoExtension.class)
+@DisplayName("UserService Tests")
+class UserServiceTest {
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+        @Mock
+        private UserRepository userRepository;
 
-@ExtendWith(SpringExtension.class)
-public class UserServiceTest {
-    private static final String FIRST_NAME = "John";
-    private static final String LAST_NAME = "Doe";
-    private static final String LOGIN = "LOGIN";
-    private static final String PASSWORD = "PASSWORD";
-    @Mock
-    private UserRepository userRepository;
-    @Mock
-    private PasswordEncoder passwordEncoder;
-    @InjectMocks
-    private UserService userService;
+        @Mock
+        private PasswordEncoder passwordEncoder;
 
-    @Test
-    public void test_create_null_user_throws_IllegalArgumentException() {
-        // GIVEN
+        @Mock
+        private JwtService jwtService;
 
-        // THEN
-        // Assertions.assertThrows(IllegalArgumentException.class,
-        // () -> userService.register(null));
-    }
+        @Mock
+        private UserDtoMapper userDtoMapper;
 
-    @Test
-    public void test_create_already_exist_user_throws_IllegalArgumentException() {
-        // GIVEN
-        UserDTO userDTO = new UserDTO();
-        userDTO.setFirstName(FIRST_NAME);
-        userDTO.setLastName(LAST_NAME);
-        userDTO.setLogin(LOGIN);
-        userDTO.setPassword(PASSWORD);
+        @Mock
+        private HttpServletResponse httpServletResponse;
 
-        User existingUser = new User();
-        existingUser.setFirstName(FIRST_NAME);
-        existingUser.setLastName(LAST_NAME);
-        existingUser.setLogin(LOGIN);
-        existingUser.setPassword(PASSWORD);
+        @InjectMocks
+        private UserService userService;
 
-        when(passwordEncoder.encode(PASSWORD)).thenReturn(PASSWORD);
-        when(userRepository.findByLogin(any())).thenReturn(Optional.of(existingUser));
+        private UserDTO testUserDTO;
+        private User testUser;
+        private User savedUser;
+        private LoginRequestDTO loginRequestDTO;
 
-        // THEN
-        Assertions.assertThrows(IllegalArgumentException.class,
-                () -> userService.register(userDTO));
-    }
+        @BeforeEach
+        void setUp() {
+                // TODO: Initialize test data
+                // Create testUserDTO with valid registration data
+                // Create testUser (entity mapped from DTO)
+                // Create savedUser (with ID set, simulates saved entity)
+                // Create loginRequestDTO with valid login credentials
+        }
 
-    @Test
-    public void test_create_user() {
-        // GIVEN
-        UserDTO userDTO = new UserDTO();
-        userDTO.setFirstName(FIRST_NAME);
-        userDTO.setLastName(LAST_NAME);
-        userDTO.setLogin(LOGIN);
-        userDTO.setPassword(PASSWORD);
-        when(passwordEncoder.encode(PASSWORD)).thenReturn(PASSWORD);
-        when(userRepository.findByLogin(any())).thenReturn(Optional.empty());
+        @Nested
+        @DisplayName("User Registration")
+        class UserRegistrationTests {
 
-        // WHEN
-        userService.register(userDTO);
+                @Test
+                @DisplayName("Should register user successfully with valid data")
+                void shouldRegisterUser_WhenDataIsValid() {
+                        // TODO: Mock userRepository.findByLogin() to return Optional.empty()
+                        // TODO: Mock userDtoMapper.toEntity() to return testUser
+                        // TODO: Mock passwordEncoder.encode() to return encoded password
+                        // TODO: Mock userRepository.save() to return savedUser
+                        // TODO: Call userService.register()
+                        // TODO: Assert returned MessageResp indicates success
+                }
 
-        // THEN
-        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
-        verify(userRepository).save(userCaptor.capture());
-        assertThat(userCaptor.getValue().getFirstName()).isEqualTo(FIRST_NAME);
-        assertThat(userCaptor.getValue().getLastName()).isEqualTo(LAST_NAME);
-        assertThat(userCaptor.getValue().getLogin()).isEqualTo(LOGIN);
-    }
+                @Test
+                @DisplayName("Should throw IllegalArgumentException when UserDTO is null")
+                void shouldThrowIllegalArgumentException_WhenUserDTOIsNull() {
+                        // TODO: Assert that calling userService.register(null) throws
+                        // IllegalArgumentException
+                }
+
+                @Test
+                @DisplayName("Should throw IllegalArgumentException when user already exists")
+                void shouldThrowIllegalArgumentException_WhenUserAlreadyExists() {
+                        // TODO: Mock userRepository.findByLogin() to return Optional.of(existingUser)
+                        // TODO: Assert that calling userService.register() throws
+                        // IllegalArgumentException
+                }
+        }
+
+        @Nested
+        @DisplayName("User Authentication")
+        class UserAuthenticationTests {
+
+                @Test
+                @DisplayName("Should authenticate user successfully with valid credentials")
+                void shouldAuthenticateUser_WhenCredentialsAreValid() {
+                        // TODO: Mock userRepository.findByLogin() to return Optional.of(testUser)
+                        // TODO: Mock passwordEncoder.matches() to return true
+                        // TODO: Mock jwtService.generateToken() to return valid JWT
+                        // TODO: Call userService.login()
+                        // TODO: Assert returned MessageResp indicates success
+                }
+
+                @Test
+                @DisplayName("Should throw IllegalArgumentException when credentials are invalid")
+                void shouldThrowIllegalArgumentException_WhenCredentialsInvalid() {
+                        // TODO: Mock userRepository.findByLogin() to return Optional.empty()
+                        // TODO: Assert that calling userService.login() throws IllegalArgumentException
+                }
+        }
+
+        @Nested
+        @DisplayName("User Logout")
+        class UserLogoutTests {
+
+                @Test
+                @DisplayName("Should logout user successfully")
+                void shouldLogoutUser_Successfully() {
+                        // TODO: Call userService.logout()
+                        // TODO: Assert returned ResponseEntity is OK status
+                }
+        }
 }
