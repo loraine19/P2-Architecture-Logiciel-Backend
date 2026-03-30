@@ -1,4 +1,4 @@
-package com.openclassrooms.etudiant.dto;
+package com.openclassrooms.etudiant.dto.dtoHelpers;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

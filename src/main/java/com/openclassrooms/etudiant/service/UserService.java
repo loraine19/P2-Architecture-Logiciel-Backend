@@ -1,13 +1,12 @@
 package com.openclassrooms.etudiant.service;
 
-import com.openclassrooms.etudiant.configuration.security.JwtAuthenticationFilter;
+import com.openclassrooms.etudiant.configuration.security.CustomUserDetailService;
 import com.openclassrooms.etudiant.dto.LoginRequestDTO;
-import com.openclassrooms.etudiant.dto.LoginResponse;
-import com.openclassrooms.etudiant.dto.MessageResp;
 import com.openclassrooms.etudiant.dto.UserDTO;
 import com.openclassrooms.etudiant.dto.UserProfileDTO;
-import com.openclassrooms.etudiant.entities.Auth;
-import com.openclassrooms.etudiant.entities.AuthType;
+import com.openclassrooms.etudiant.dto.dtoHelpers.AuthType;
+import com.openclassrooms.etudiant.dto.dtoHelpers.LoginResponse;
+import com.openclassrooms.etudiant.dto.dtoHelpers.MessageResp;
 import com.openclassrooms.etudiant.entities.User;
 import com.openclassrooms.etudiant.mapper.UserDtoMapper;
 import com.openclassrooms.etudiant.repository.UserRepository;
@@ -19,7 +18,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
@@ -47,7 +45,7 @@ public class UserService implements UserServiceInterface {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final UserDtoMapper userDtoMapper;
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final CustomUserDetailService userDetailsService;
 
     // Configuration from environment
     @Value("${ENV:dev}")
@@ -59,40 +57,33 @@ public class UserService implements UserServiceInterface {
     @Value("${JWT_REFRESH_EXPIRATION_MS:172800000}")
     private Long jwtRefreshExpirationMs;
 
-    // Register new user account
+    /** PUBLIC SERVICE METHODS */
+
+    /* REGISTER NEW USER */
     @Override
-    public MessageResp register(UserDTO userDTO) {
+    public ResponseEntity<MessageResp> register(UserDTO userDTO) {
         Assert.notNull(userDTO, "User data cannot be null");
         Assert.hasText(userDTO.getLogin(), "User login cannot be empty");
-
-        log.debug("Registration attempt for user: {}", userDTO.getLogin());
+        ResponseEntity<MessageResp> errorResponseRegister = errorResponse("Registration failed");
 
         // Check for existing user
-        if (userRepository.findByLogin(userDTO.getLogin()).isPresent()) {
-            log.warn("Registration failed - user already exists: {}", userDTO.getLogin());
-            throw new IllegalArgumentException("User with login '" + userDTO.getLogin() + "' already exists");
-        }
+        if (userRepository.findByLogin(userDTO.getLogin()).isPresent())
+            return errorResponse("Login already exists");
 
-        try {
-            // Map DTO to entity and encrypt password
-            User newUser = userDtoMapper.toEntity(userDTO);
-            newUser.setPassword(passwordEncoder.encode(userDTO.getPassword()));
+        // Map DTO to entity and encrypt password
+        User newUser = userDtoMapper.toEntity(userDTO);
+        newUser.setPassword(passwordEncoder.encode(userDTO.getPassword()));
 
-            // Save to database
-            User savedUser = userRepository.save(newUser);
-            log.info("User registered successfully: {} (ID: {})", savedUser.getLogin(), savedUser.getId());
-
-            return MessageResp.success("User '" + userDTO.getLogin() + "' registered successfully");
-
-        } catch (DataIntegrityViolationException e) {
-            log.error("Database constraint violation during registration for user: {}", userDTO.getLogin(), e);
-            throw new IllegalArgumentException("Registration failed due to data constraint violation");
-        }
+        // Save to database
+        User savedUser = userRepository.save(newUser);
+        if (savedUser == null || savedUser.getId() == null)
+            return errorResponseRegister;
+        return ResponseEntity.ok(MessageResp.success("User registered successfully"));
     }
 
-    // Authenticate user credentials and create session
+    /* LOGIN USER */
     @Override
-    public LoginResponse login(
+    public ResponseEntity<LoginResponse> login(
             LoginRequestDTO loginRequestDTO,
             HttpServletRequest request,
             HttpServletResponse response) {
@@ -100,33 +91,30 @@ public class UserService implements UserServiceInterface {
         Assert.hasText(loginRequestDTO.getLogin(), "Login cannot be empty");
         Assert.hasText(loginRequestDTO.getPassword(), "Password cannot be empty");
 
-        log.debug("Login attempt for user: {}", loginRequestDTO.getLogin());
+        ResponseEntity<LoginResponse> errorResponseLogin = ResponseEntity.status(401)
+                .body(LoginResponse.error("Invalid login credentials"));
 
         // Find and validate user
         Optional<User> userOptional = userRepository.findByLogin(loginRequestDTO.getLogin());
-        if (userOptional.isEmpty()) {
-            log.warn("Login failed - user not found: {}", loginRequestDTO.getLogin());
-            throw new IllegalArgumentException("Invalid credentials");
-        }
+        if (userOptional.isEmpty())
+            return errorResponseLogin;
 
         User user = userOptional.get();
 
         // Verify password
-        if (!passwordEncoder.matches(loginRequestDTO.getPassword(), user.getPassword())) {
-            log.warn("Login failed - invalid password for user: {}", loginRequestDTO.getLogin());
-            throw new IllegalArgumentException("Invalid credentials");
-        }
+        if (!passwordEncoder.matches(loginRequestDTO.getPassword(), user.getPassword()))
+            return errorResponseLogin;
 
         // Generate JWT token
-        Auth jwtAuth = new Auth(true, jwtService.generateToken(user));
+        String jwtToken = jwtService.generateToken(user, false);
 
         // Determine token destination
         AuthType authType = loginRequestDTO.getAuthType() != null ? loginRequestDTO.getAuthType() : AuthType.COOKIE;
 
-        String refreshToken = loginRequestDTO.isRememberMe() ? jwtService.generateRefreshToken(user) : null;
+        // Generate refresh token if rememberMe is true
+        String refreshToken = loginRequestDTO.isRememberMe() ? jwtService.generateToken(user, true) : null;
 
         // if rememberMe is true, set hash refresh token in Database for future
-        // validation
         if (refreshToken != null) {
             String hashedRefreshToken = hashWithSHA256(refreshToken);
             user.setRefreshToken(hashedRefreshToken);
@@ -134,17 +122,14 @@ public class UserService implements UserServiceInterface {
         }
 
         // Set cookie or header based on auth type
-        if (authType == AuthType.COOKIE) {
-            setAuthCookie(response, jwtAuth.getToken(), String.valueOf(jwtExpirationMs / 1000),
-                    loginRequestDTO.isRememberMe(), refreshToken, String.valueOf(jwtRefreshExpirationMs / 1000));
-        } else {
-            injectTokenIntoHeaders(request, response, jwtAuth.getToken());
-        }
+        if (authType == AuthType.COOKIE)
+            setAuthCookie(response, jwtToken,
+                    loginRequestDTO.isRememberMe(), refreshToken, false);
+        else
+            injectTokenIntoHeaders(request, response, jwtToken);
 
         // Create user profile for response (without password)
         UserProfileDTO userProfile = userDtoMapper.toProfileDto(user);
-
-        log.info("User logged in successfully: {}", user.getLogin());
 
         // Include refresh token in response only for header-based auth (mobile)
         String responseRefreshToken = (authType == AuthType.HEADER) ? refreshToken : null;
@@ -154,100 +139,144 @@ public class UserService implements UserServiceInterface {
                 userProfile,
                 authType,
                 responseRefreshToken);
-        return successResponse;
+        return ResponseEntity.ok(successResponse);
     }
 
-    // Logout user by clearing authentication cookie
+    /* LOGOUT USER */
     @Override
     public ResponseEntity<MessageResp> logout(HttpServletResponse response) {
-        log.debug("User logout request received");
-
         // Create cookie deletion response
-        setAuthCookie(response, "", "0", true, "", "0");
-
+        setAuthCookie(response, "", true, "", true);
         MessageResp logoutMessage = MessageResp.success("User logged out successfully");
         return ResponseEntity.ok(logoutMessage);
     }
 
+    /* REFRESH TOKEN */
     @Override
     public ResponseEntity<MessageResp> refresh(String refreshToken, HttpServletRequest request,
             HttpServletResponse response) {
 
-        // Extract refresh token from cookies
-        System.out.println("Received refresh token: " + refreshToken);
-        if (refreshToken == null)
-            return ResponseEntity.badRequest().body(MessageResp.error("No refresh token provided"));
+        AuthType authType = AuthType.HEADER;
+        ResponseEntity<MessageResp> errorResponse = errorResponse("Token refresh failed");
 
-        // Validate refresh token and generate new access token
-        // (Implementation would go here, including hashing the provided refresh token
-        // and comparing with stored hash)
+        // Extract refresh token from cookies if not in body
+        if (refreshToken == null) {
+            refreshToken = jwtService.getJwtFromCookies(request, true);
+            if (refreshToken == null)
+                return errorResponse;
+            else
+                authType = AuthType.COOKIE;
+        }
 
-        this.jwtAuthenticationFilter.validateRefreshToken(refreshToken);
-        String userLogin = jwtService.extractUsername(refreshToken, true);
-        Optional<User> userOptional = userRepository.findByLogin(userLogin);
-        User user = userOptional.get();
-        String newAccessToken = jwtService.generateToken(user);
+        String userLogin = this.jwtService.extractUsername(refreshToken, true);
+        if (userLogin == null)
+            return errorResponse;
+        UserDetails userDetails = this.userDetailsService.loadUserByUsername(userLogin);
+        if (userDetails == null)
+            return errorResponse;
+        Boolean isValid = this.jwtService.isTokenValid(refreshToken, userDetails, true);
+        if (!isValid)
+            return errorResponse;
+        Boolean isValidDB = validateRefreshToken(refreshToken);
+        if (!isValidDB)
+            return errorResponse;
 
-        injectTokenIntoHeaders(request, response, newAccessToken);
-        System.out.println(response.getHeader("Authorization"));
-        return ResponseEntity.ok(MessageResp.success("Access token refreshed successfully" + newAccessToken));
+        String newAccessToken = jwtService.generateToken(userDetails, false);
+
+        if (authType == AuthType.COOKIE)
+            addTokenCookie(response, newAccessToken, jwtExpirationMs, "token");
+
+        else
+            injectTokenIntoHeaders(request, response, newAccessToken);
+
+        return ResponseEntity.ok(MessageResp.success("Access token refreshed successfully"));
     }
 
     /** PRIVATE HELPER METHODS */
 
-    // Set secure HTTP-only authentication cookie
-    @SuppressWarnings("null")
-    private void setAuthCookie(HttpServletResponse response, String token, String durationInSeconds,
-            @Nullable Boolean remenberMe, @Nullable String refreshToken, @Nullable String refreshDurationInSeconde) {
-
-        ResponseCookie jwtCookie = ResponseCookie.from("token", token)
+    /* ADD TOKEN COOKIE */
+    private void addTokenCookie(HttpServletResponse response, String token, Long expirationMS,
+            String name) {
+        ResponseCookie tokenCookie = ResponseCookie.from(name, token)
                 .httpOnly(true)
                 .secure("prod".equalsIgnoreCase(env))
                 .path("/")
-                .maxAge(Long.parseLong(durationInSeconds))
+                .maxAge(expirationMS / 1000)
                 .sameSite("Lax")
                 .build();
-        response.addHeader("Set-Cookie", jwtCookie.toString());
 
-        if (refreshToken != null) {
-            ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", refreshToken)
-                    .httpOnly(true)
-                    .secure("prod".equalsIgnoreCase(env))
-                    .path("/")
-                    .maxAge(jwtRefreshExpirationMs)
-                    .sameSite("Lax")
-                    .build();
-            response.addHeader("Set-Cookie", refreshCookie.toString());
-        }
-
-        log.debug("Authentication cookie set with expiration: {} seconds", durationInSeconds);
+        response.addHeader("Set-Cookie", tokenCookie.toString());
     }
 
-    // Inject token into HTTP headers for mobile clients
+    /* VALIDATE REFRESH TOKEN */
+    private boolean validateRefreshToken(String refreshToken) {
+        String userLogin = jwtService.extractUsername(refreshToken, true);
+        if (userLogin == null)
+            return errorFalseReturn("No userLogin");
+
+        UserDetails userDetails = userDetailsService.loadUserByUsername(userLogin);
+        if (userDetails == null)
+            return errorFalseReturn("No userDetails");
+
+        Boolean isValid = jwtService.isTokenValid(refreshToken, userDetails, true);
+        if (!isValid)
+            return errorFalseReturn("Token not valid");
+
+        Optional<User> userOptional = userRepository.findByLogin(userLogin);
+        if (userOptional.isEmpty())
+            return errorFalseReturn("User not found");
+
+        User user = userOptional.get();
+        String storedHashedRefreshToken = user.getRefreshToken();
+
+        if (storedHashedRefreshToken == null || storedHashedRefreshToken.isEmpty())
+            return errorFalseReturn("No refresh token in DB");
+
+        String incomingTokenHash = hashWithSHA256(refreshToken);
+        boolean isValidDB = storedHashedRefreshToken.equals(incomingTokenHash);
+
+        if (!isValidDB)
+            return errorFalseReturn("Refresh token hash mismatch");
+
+        return isValidDB;
+    }
+
+    /* SET AUTH COOKIE */
+    private void setAuthCookie(HttpServletResponse response, String token,
+            @Nullable Boolean remenberMe, @Nullable String refreshToken, @Nullable Boolean isLogout) {
+
+        addTokenCookie(response, token, isLogout ? 0 : jwtExpirationMs, "token");
+        if (refreshToken != null)
+            addTokenCookie(response, refreshToken, isLogout ? 0 : jwtRefreshExpirationMs, "refreshToken");
+
+    }
+
+    /* INJECT TOKEN INTO HEADERS FOR MOBILE CLIENTS */
     private void injectTokenIntoHeaders(HttpServletRequest request, HttpServletResponse response, String token) {
         response.setHeader("Authorization", "Bearer " + token);
     }
 
-    // Hash refresh token with SHA-256 (doesn't have BCrypt's 72-byte limitation)
+    /* HASH WITH SHA-256 FOR REFRESH TOKEN */
     private String hashWithSHA256(String input) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
-            StringBuilder hexString = new StringBuilder();
+            return java.util.HexFormat.of().formatHex(hash);
 
-            for (byte b : hash) {
-                String hex = Integer.toHexString(0xff & b);
-                if (hex.length() == 1) {
-                    hexString.append('0');
-                }
-                hexString.append(hex);
-            }
-
-            return hexString.toString();
         } catch (NoSuchAlgorithmException e) {
-            log.error("SHA-256 algorithm not available", e);
-            throw new RuntimeException("Failed to hash refresh token", e);
+            throw new IllegalStateException("SHA-256 is mandatory in any JVM", e);
         }
+    }
+
+    /* ERRORS HELPERS */
+    private Boolean errorFalseReturn(String message) {
+        log.warn(message);
+        return false;
+    }
+
+    private ResponseEntity<MessageResp> errorResponse(String message) {
+        return ResponseEntity.badRequest()
+                .body(MessageResp.error(message));
     }
 
 }

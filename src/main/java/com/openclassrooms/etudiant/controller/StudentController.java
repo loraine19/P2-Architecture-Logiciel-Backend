@@ -27,9 +27,9 @@ public class StudentController {
     private final StudentService studentService;
     private final StudentDtoMapper studentMapper;
 
+    /* GET ALL STUDENTS */
     @GetMapping
     public ResponseEntity<List<StudentDTO>> getAllStudents() {
-        log.debug("Getting all students");
         List<StudentDTO> students = studentService.getAllStudents()
                 .stream()
                 .map(studentMapper::toDto)
@@ -38,25 +38,32 @@ public class StudentController {
         return ResponseEntity.ok(students);
     }
 
+    /* GET BY ID */
     @GetMapping("/{id}")
     public ResponseEntity<StudentDTO> getStudentById(@PathVariable Long id) {
-        log.debug("Getting student with id: {}", id);
         Student student = studentService.getStudentById(id);
         return ResponseEntity.ok(studentMapper.toDto(student));
     }
 
+    /* GET BY EMAIL */
+    @GetMapping("/email/{email}")
+    public ResponseEntity<StudentDTO> getStudentByEmail(@PathVariable String email) {
+        Student student = studentService.getStudentByEmail(email);
+        return ResponseEntity.ok(studentMapper.toDto(student));
+    }
+
+    /* CREATE STUDENT */
     @PostMapping
     public ResponseEntity<StudentDTO> createStudent(@Valid @RequestBody StudentDTO studentDTO) {
-        log.debug("Creating new student: {}", studentDTO.getFirstName() + " " + studentDTO.getLastName());
         Student studentRequest = studentMapper.toEntity(studentDTO);
         Student createdStudent = studentService.createStudent(studentRequest);
         log.debug("Student created with id: {}", createdStudent.getId());
         return new ResponseEntity<>(studentMapper.toDto(createdStudent), HttpStatus.CREATED);
     }
 
+    /* UPDATE STUDENT */
     @PutMapping("/{id}")
     public ResponseEntity<StudentDTO> updateStudent(@PathVariable Long id, @Valid @RequestBody StudentDTO studentDTO) {
-        log.debug("Updating student with id: {}", id);
         Student studentRequest = studentMapper.toEntity(studentDTO);
 
         // Check for ID mismatch - basic validation
@@ -69,6 +76,7 @@ public class StudentController {
         return ResponseEntity.ok(studentMapper.toDto(updatedStudent));
     }
 
+    /* DELETE STUDENT */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteStudent(@PathVariable Long id) {
         log.debug("Deleting student with id: {}", id);

@@ -30,46 +30,19 @@ import java.util.Map;
 @Slf4j
 public class GlobalExceptionHandler {
 
-    /**
-     * Create standardized error response
-     */
-    private ResponseEntity<ErrorDetails> createErrorResponse(String errorCode, String message,
-            HttpStatus status, WebRequest request) {
-        log.error("[{}] {}: {}", status.value(), errorCode, message);
-        
-        ErrorDetails errorDetails = ErrorDetails.builder()
-                .timestamp(LocalDateTime.now())
-                .status(status.value())
-                .error(status.getReasonPhrase())
-                .errorCode(errorCode)
-                .message(message)
-                .path(extractPath(request))
-                .build();
-                
-        return new ResponseEntity<>(errorDetails, status);
-    }
+    /** PUBLIC METHODS */
 
-    /**
-     * Extract path from WebRequest for error details
-     */
-    private String extractPath(WebRequest request) {
-        String description = request.getDescription(false);
-        return description.startsWith("uri=") ? description.substring(4) : description;
-    }
-
-    /**
-     * Bean Validation errors (field validation failures)
-     */
+    /* VALIDATION ERRORS */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorDetails> handleValidationErrors(MethodArgumentNotValidException ex, WebRequest request) {
         Map<String, String> fieldErrors = new HashMap<>();
-        
+
         ex.getBindingResult().getAllErrors().forEach((error) -> {
             String fieldName = ((FieldError) error).getField();
             String errorMessage = error.getDefaultMessage();
             fieldErrors.put(fieldName, errorMessage);
         });
-        
+
         ErrorDetails errorDetails = ErrorDetails.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.BAD_REQUEST.value())
@@ -79,34 +52,31 @@ public class GlobalExceptionHandler {
                 .path(extractPath(request))
                 .validationErrors(fieldErrors)
                 .build();
-                
+
         log.warn("Validation error on {}: {}", extractPath(request), fieldErrors);
         return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
     }
 
-    /**
-     * Database integrity constraint violations
-     */
+    /* DATABASE ERRORS */
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErrorDetails> handleDatabaseErrors(DataIntegrityViolationException ex, WebRequest request) {
-        String rootCause = ex.getMostSpecificCause().getMessage();
-        
+        Throwable cause = ex.getMostSpecificCause();
+        String rootCause = (cause != null && cause.getMessage() != null) ? cause.getMessage() : "";
+
         if (rootCause.contains("Duplicate") || rootCause.contains("UNIQUE")) {
             return createErrorResponse(
                     "DUPLICATE_ENTRY",
                     "Resource already exists - duplicate entry detected",
                     HttpStatus.CONFLICT, request);
         }
-        
+
         return createErrorResponse(
                 "DATA_INTEGRITY_ERROR",
                 "Database constraint violation",
                 HttpStatus.UNPROCESSABLE_ENTITY, request);
     }
-    
-    /**
-     * Entity not found exceptions
-     */
+
+    /* ENTITY NOT FOUND */
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ErrorDetails> handleEntityNotFound(EntityNotFoundException ex, WebRequest request) {
         return createErrorResponse(
@@ -115,20 +85,16 @@ public class GlobalExceptionHandler {
                 HttpStatus.NOT_FOUND, request);
     }
 
-    /**
-     * Authentication failures (wrong credentials)
-     */
-    @ExceptionHandler({BadCredentialsException.class, AuthenticationException.class})
+    /* AUTHENTICATION ERRORS */
+    @ExceptionHandler({ BadCredentialsException.class, AuthenticationException.class })
     public ResponseEntity<ErrorDetails> handleAuthenticationErrors(Exception ex, WebRequest request) {
         return createErrorResponse(
                 "AUTHENTICATION_FAILED",
                 "Invalid credentials provided",
                 HttpStatus.UNAUTHORIZED, request);
     }
-    
-    /**
-     * Access denied (insufficient permissions)
-     */
+
+    /* ACCESS DENIED */
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorDetails> handleAccessDenied(AccessDeniedException ex, WebRequest request) {
         return createErrorResponse(
@@ -136,21 +102,18 @@ public class GlobalExceptionHandler {
                 "Insufficient permissions to access this resource",
                 HttpStatus.FORBIDDEN, request);
     }
-    
-    /**
-     * HTTP method not supported
-     */
+
+    /* HTTP METHOD NOT SUPPORTED */
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    public ResponseEntity<ErrorDetails> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex, WebRequest request) {
+    public ResponseEntity<ErrorDetails> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex,
+            WebRequest request) {
         return createErrorResponse(
                 "METHOD_NOT_SUPPORTED",
                 "HTTP method '" + ex.getMethod() + "' not supported for this endpoint",
                 HttpStatus.METHOD_NOT_ALLOWED, request);
     }
 
-    /**
-     * Resource not found (404 errors)
-     */
+    /* RESOURCE NOT FOUND */
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<ErrorDetails> handleResourceNotFound(NoResourceFoundException ex, WebRequest request) {
         return createErrorResponse(
@@ -158,10 +121,8 @@ public class GlobalExceptionHandler {
                 "The requested resource was not found: " + ex.getResourcePath(),
                 HttpStatus.NOT_FOUND, request);
     }
-    
-    /**
-     * Illegal argument exceptions
-     */
+
+    /* ILLEGAL ARGUMENT */
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorDetails> handleIllegalArgument(IllegalArgumentException ex, WebRequest request) {
         return createErrorResponse(
@@ -169,10 +130,8 @@ public class GlobalExceptionHandler {
                 ex.getMessage() != null ? ex.getMessage() : "Invalid argument provided",
                 HttpStatus.BAD_REQUEST, request);
     }
-    
-    /**
-     * Runtime exceptions (general application errors)
-     */
+
+    /* RUNTIME EXCEPTIONS */
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ErrorDetails> handleRuntimeException(RuntimeException ex, WebRequest request) {
         return createErrorResponse(
@@ -180,10 +139,8 @@ public class GlobalExceptionHandler {
                 "An unexpected error occurred during request processing",
                 HttpStatus.INTERNAL_SERVER_ERROR, request);
     }
-    
-    /**
-     * Catch-all exception handler (last resort)
-     */
+
+    /* CATCH-ALL EXCEPTION HANDLER */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorDetails> handleGenericException(Exception ex, WebRequest request) {
         log.error("Unhandled exception occurred", ex);
@@ -192,4 +149,35 @@ public class GlobalExceptionHandler {
                 "An internal server error occurred",
                 HttpStatus.INTERNAL_SERVER_ERROR, request);
     }
+
+    /* PRIVATE HELPER METHODS */
+
+    /* Create standardized error response */
+    private ResponseEntity<ErrorDetails> createErrorResponse(String errorCode, String message,
+            HttpStatus status, WebRequest request) {
+
+        if (status.is4xxClientError()) {
+            log.warn("[{}] {}: {}", status.value(), errorCode, message);
+        } else {
+            log.error("[{}] {}: {}", status.value(), errorCode, message);
+        }
+
+        ErrorDetails errorDetails = ErrorDetails.builder()
+                .timestamp(LocalDateTime.now())
+                .status(status.value())
+                .error(status.getReasonPhrase())
+                .errorCode(errorCode)
+                .message(message)
+                .path(extractPath(request))
+                .build();
+
+        return new ResponseEntity<>(errorDetails, status);
+    }
+
+    /* Extract path from WebRequest for error details */
+    private String extractPath(WebRequest request) {
+        String description = request.getDescription(false);
+        return description.startsWith("uri=") ? description.substring(4) : description;
+    }
+
 }

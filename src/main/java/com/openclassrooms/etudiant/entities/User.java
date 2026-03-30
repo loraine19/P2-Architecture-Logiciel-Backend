@@ -76,49 +76,18 @@ public class User implements UserDetails {
 
     // Spring Security UserDetails implementation
 
-    /**
-     * Return user authorities/roles - currently none (basic auth only)
-     */
+    // No roles or authorities implemented yet - returns empty list
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(); // No roles implemented yet
     }
 
-    /**
-     * Return username for Spring Security (uses login field)
-     */
     @Override
     public String getUsername() {
         return login;
     }
 
-    /**
-     * Account never expires in this basic implementation
-     */
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
-    /**
-     * Account never locked in this basic implementation
-     */
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-
-    /**
-     * Credentials never expire in this basic implementation
-     */
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
-    /**
-     * Account always enabled in this basic implementation
-     */
+    // Not implementing account for now - all return true
     @Override
     public boolean isEnabled() {
         return true;

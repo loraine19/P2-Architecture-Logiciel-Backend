@@ -1,95 +1,36 @@
 package com.openclassrooms.etudiant.configuration.security;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
- * Security constants for endpoint configurations
- * Centralized public endpoint definitions for SpringSecurityConfig and
- * JwtAuthenticationFilter
+ * SecurityConstants class defines public endpoints and utility methods for
+ * security configuration
  */
 public final class SecurityConstants {
 
-    /**
-     * Public endpoints for development and staging environments
-     */
-    public static final String[] DEV_PUBLIC_ENDPOINTS = {
+    // Public endpoints
+    static final List<String> PUBLIC_PATHS = Arrays.asList(
             "/api/register",
             "/api/login",
             "/api/logout",
             "/api/refresh",
-            "/register",
-            "/login",
-            "/logout",
-            "/refresh",
-    };
-
-    /**
-     * Public endpoints for production environment
-     */
-    public static final String[] PROD_PUBLIC_ENDPOINTS = {
-            "/api/register",
-            "/api/login",
-            "/api/logout",
-            "/api/refresh",
-            "/register",
-            "/login",
-            "/logout",
-            "/refresh"
-    };
-
-    /**
-     * Always public endpoints for all environments
-     */
-    public static final String[] ALWAYS_PUBLIC_ENDPOINTS = {
             "/actuator/**",
-            "/error"
-    };
+            "/error");
 
-    /**
-     * Get public endpoints for environment
-     */
-
-    public static String[] getPublicEndpoints(String environment) {
-        if ("prod".equalsIgnoreCase(environment)) {
-            return combineEndpoints(PROD_PUBLIC_ENDPOINTS, ALWAYS_PUBLIC_ENDPOINTS);
-        } else {
-            return combineEndpoints(DEV_PUBLIC_ENDPOINTS, ALWAYS_PUBLIC_ENDPOINTS);
-        }
-    }
-
-    /**
-     * Check if URI is a public endpoint
-     */
-    public static boolean isPublicEndpoint(String requestURI, String environment) {
-        String[] publicEndpoints = getPublicEndpoints(environment);
-
-        for (String endpoint : publicEndpoints) {
-            // Handle wildcard patterns like /actuator/**
-            if (endpoint.endsWith("/**")) {
-                String basePattern = endpoint.substring(0, endpoint.length() - 3);
-                if (requestURI.startsWith(basePattern)) {
-                    return true;
-                }
+    // Verification endpoint
+    public static boolean isPublicEndpoint(String requestURI) {
+        return PUBLIC_PATHS.stream().anyMatch(path -> {
+            // If the path ends with /**, check if the request URI starts with the base path
+            if (path.endsWith("/**")) {
+                return requestURI.startsWith(path.substring(0, path.length() - 3));
             }
             // Exact match
-            else if (requestURI.equals(endpoint)) {
-                return true;
-            }
-        }
-
-        return false;
+            return requestURI.equals(path);
+        });
     }
 
-    /**
-     * Combine endpoint arrays
-     */
-    private static String[] combineEndpoints(String[] primary, String[] always) {
-        String[] combined = new String[primary.length + always.length];
-        System.arraycopy(primary, 0, combined, 0, primary.length);
-        System.arraycopy(always, 0, combined, primary.length, always.length);
-        return combined;
-    }
-
-    // Private constructor to prevent instantiation
     private SecurityConstants() {
-        throw new IllegalStateException("Utility class - should not be instantiated");
+        throw new IllegalStateException("Utility class");
     }
 }

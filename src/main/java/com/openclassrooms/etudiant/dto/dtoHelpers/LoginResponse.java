@@ -1,6 +1,6 @@
-package com.openclassrooms.etudiant.dto;
+package com.openclassrooms.etudiant.dto.dtoHelpers;
 
-import com.openclassrooms.etudiant.entities.AuthType;
+import com.openclassrooms.etudiant.dto.UserProfileDTO;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

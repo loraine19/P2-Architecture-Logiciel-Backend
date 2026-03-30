@@ -2,8 +2,8 @@ package com.openclassrooms.etudiant.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.openclassrooms.etudiant.dto.LoginRequestDTO;
-import com.openclassrooms.etudiant.dto.MessageResp;
 import com.openclassrooms.etudiant.dto.UserDTO;
+import com.openclassrooms.etudiant.dto.dtoHelpers.MessageResp;
 import com.openclassrooms.etudiant.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

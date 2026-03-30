@@ -1,6 +1,6 @@
 package com.openclassrooms.etudiant.dto;
 
-import com.openclassrooms.etudiant.entities.AuthType;
+import com.openclassrooms.etudiant.dto.dtoHelpers.AuthType;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

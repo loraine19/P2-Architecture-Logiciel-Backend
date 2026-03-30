@@ -53,6 +53,7 @@ public class RequestLoggingFilterConfig {
         return filter;
     }
 
+    /** PRIVATE METHODS */
     /**
      * Determine if headers should be logged based on environment
      * prod=false (security), staging/dev=true (debug)
