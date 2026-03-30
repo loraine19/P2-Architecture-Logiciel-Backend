@@ -17,7 +17,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -30,15 +29,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
-
-    @Value("${ENV:dev}")
-    private String env;
-
-    @Value("${JWT_EXPIRATION_MS:3600000}")
-    private Long jwtExpirationMs;
-
-    @Value("${JWT_REFRESH_EXPIRATION_MS:172800000}")
-    private Long jwtRefreshExpirationMs;
 
     @Override
     protected void doFilterInternal(

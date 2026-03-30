@@ -53,7 +53,7 @@ public class UserController {
     /* REFRESH TOKEN */
     @PostMapping("/api/refresh")
     public ResponseEntity<MessageResp> refresh(
-            @Valid @RequestBody RefreshTokenDTO refreshTokenDTO,
+            @Valid @RequestBody(required = false) RefreshTokenDTO refreshTokenDTO,
             HttpServletRequest request,
             HttpServletResponse response) {
         return userService.refresh(refreshTokenDTO.getRefreshToken(), request, response);
