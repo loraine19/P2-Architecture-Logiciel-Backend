@@ -52,7 +52,7 @@ public class StudentService implements StudentServiceInterface {
 
     /* GET BY EMAIL */
     @Override
-    @Transactional(readOnly = true)
+    // TODO verfi transactional read only
     public Student getStudentByEmail(String email) {
         Assert.hasText(email, "Email cannot be empty");
         Student student = studentRepository.findByEmail(email)

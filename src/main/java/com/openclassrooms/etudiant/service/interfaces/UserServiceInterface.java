@@ -7,7 +7,6 @@ import com.openclassrooms.etudiant.dto.dtoHelpers.MessageResp;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.http.ResponseEntity;
 
 /**
  * Service interface for user authentication and management
@@ -15,13 +14,13 @@ import org.springframework.http.ResponseEntity;
  */
 public interface UserServiceInterface {
 
-    ResponseEntity<MessageResp> register(UserDTO userDTO);
+    MessageResp register(UserDTO userDTO);
 
-    ResponseEntity<LoginResponse> login(LoginRequestDTO loginRequestDTO, HttpServletRequest request,
+    LoginResponse login(LoginRequestDTO loginRequestDTO, HttpServletRequest request,
             HttpServletResponse response);
 
-    ResponseEntity<MessageResp> logout(HttpServletResponse response);
+    MessageResp logout(HttpServletResponse response);
 
-    ResponseEntity<MessageResp> refresh(String refreshToken, HttpServletRequest request, HttpServletResponse response);
+    MessageResp refresh(String refreshToken, HttpServletRequest request, HttpServletResponse response);
 
 }

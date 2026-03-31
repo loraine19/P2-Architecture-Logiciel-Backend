@@ -32,7 +32,8 @@ public class UserController {
     /* REGISTER */
     @PostMapping("/api/register")
     public ResponseEntity<MessageResp> register(@Valid @RequestBody UserDTO userDTO) {
-        return userService.register(userDTO);
+        MessageResp messageResp = userService.register(userDTO);
+        return ResponseEntity.ok(messageResp);
     }
 
     /* LOGIN */
@@ -41,13 +42,15 @@ public class UserController {
             @Valid @RequestBody LoginRequestDTO loginRequestDTO,
             HttpServletRequest request,
             HttpServletResponse response) {
-        return userService.login(loginRequestDTO, request, response);
+        LoginResponse loginResponse = userService.login(loginRequestDTO, request, response);
+        return ResponseEntity.ok(loginResponse);
     }
 
     /* LOGOUT */
     @PostMapping("/api/logout")
     public ResponseEntity<MessageResp> logout(HttpServletResponse response) {
-        return userService.logout(response);
+        MessageResp messageResp = userService.logout(response);
+        return ResponseEntity.ok(messageResp);
     }
 
     /* REFRESH TOKEN */
@@ -56,7 +59,8 @@ public class UserController {
             @Valid @RequestBody(required = false) RefreshTokenDTO refreshTokenDTO,
             HttpServletRequest request,
             HttpServletResponse response) {
-        return userService.refresh(refreshTokenDTO.getRefreshToken(), request, response);
+        MessageResp messageResp = userService.refresh(refreshTokenDTO.getRefreshToken(), request, response);
+        return ResponseEntity.ok(messageResp);
     }
 
 }

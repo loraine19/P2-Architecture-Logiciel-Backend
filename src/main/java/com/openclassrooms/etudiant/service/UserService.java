@@ -19,7 +19,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
-import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -61,14 +60,13 @@ public class UserService implements UserServiceInterface {
 
     /* REGISTER NEW USER */
     @Override
-    public ResponseEntity<MessageResp> register(UserDTO userDTO) {
+    public MessageResp register(UserDTO userDTO) {
         Assert.notNull(userDTO, "User data cannot be null");
         Assert.hasText(userDTO.getLogin(), "User login cannot be empty");
-        ResponseEntity<MessageResp> errorResponseRegister = errorResponse("Registration failed");
 
         // Check for existing user
         if (userRepository.findByLogin(userDTO.getLogin()).isPresent())
-            return errorResponse("Login already exists");
+            throw new IllegalArgumentException("Login already exists");
 
         // Map DTO to entity and encrypt password
         User newUser = userDtoMapper.toEntity(userDTO);
@@ -77,13 +75,13 @@ public class UserService implements UserServiceInterface {
         // Save to database
         User savedUser = userRepository.save(newUser);
         if (savedUser == null || savedUser.getId() == null)
-            return errorResponseRegister;
-        return ResponseEntity.ok(MessageResp.success("User registered successfully"));
+            throw new IllegalStateException("User registration failed");
+        return MessageResp.success("User registered successfully");
     }
 
     /* LOGIN USER */
     @Override
-    public ResponseEntity<LoginResponse> login(
+    public LoginResponse login(
             LoginRequestDTO loginRequestDTO,
             HttpServletRequest request,
             HttpServletResponse response) {
@@ -91,19 +89,16 @@ public class UserService implements UserServiceInterface {
         Assert.hasText(loginRequestDTO.getLogin(), "Login cannot be empty");
         Assert.hasText(loginRequestDTO.getPassword(), "Password cannot be empty");
 
-        ResponseEntity<LoginResponse> errorResponseLogin = ResponseEntity.status(401)
-                .body(LoginResponse.error("Invalid login credentials"));
-
         // Find and validate user
         Optional<User> userOptional = userRepository.findByLogin(loginRequestDTO.getLogin());
         if (userOptional.isEmpty())
-            return errorResponseLogin;
+            throw new IllegalArgumentException("Invalid login credentials");
 
         User user = userOptional.get();
 
         // Verify password
         if (!passwordEncoder.matches(loginRequestDTO.getPassword(), user.getPassword()))
-            return errorResponseLogin;
+            throw new IllegalArgumentException("Invalid login credentials");
 
         // Generate JWT token
         String jwtToken = jwtService.generateToken(user, false);
@@ -139,25 +134,25 @@ public class UserService implements UserServiceInterface {
                 userProfile,
                 authType,
                 responseRefreshToken);
-        return ResponseEntity.ok(successResponse);
+        return successResponse;
     }
 
     /* LOGOUT USER */
     @Override
-    public ResponseEntity<MessageResp> logout(HttpServletResponse response) {
+    public MessageResp logout(HttpServletResponse response) {
         // Create cookie deletion response
         setAuthCookie(response, "", true, "", true);
         MessageResp logoutMessage = MessageResp.success("User logged out successfully");
-        return ResponseEntity.ok(logoutMessage);
+        return logoutMessage;
     }
 
     /* REFRESH TOKEN */
     @Override
-    public ResponseEntity<MessageResp> refresh(String refreshToken, HttpServletRequest request,
+    public MessageResp refresh(String refreshToken, HttpServletRequest request,
             HttpServletResponse response) {
 
         AuthType authType = AuthType.HEADER;
-        ResponseEntity<MessageResp> errorResponse = errorResponse("Token refresh failed");
+        MessageResp errorResponse = MessageResp.error("Token refresh failed");
 
         // Extract refresh token from cookies if not in body
         if (refreshToken == null) {
@@ -189,7 +184,7 @@ public class UserService implements UserServiceInterface {
         else
             injectTokenIntoHeaders(request, response, newAccessToken);
 
-        return ResponseEntity.ok(MessageResp.success("Access token refreshed successfully"));
+        return MessageResp.success("Token refreshed successfully");
     }
 
     /** PRIVATE HELPER METHODS */
@@ -272,11 +267,6 @@ public class UserService implements UserServiceInterface {
     private Boolean errorFalseReturn(String message) {
         log.warn(message);
         return false;
-    }
-
-    private ResponseEntity<MessageResp> errorResponse(String message) {
-        return ResponseEntity.badRequest()
-                .body(MessageResp.error(message));
     }
 
 }
