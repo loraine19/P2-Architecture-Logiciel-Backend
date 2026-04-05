@@ -1,6 +1,9 @@
 spring:
     application:
         name: etudiant-backend
+    web:
+        resources:
+            static-locations: file:./target/site/jacoco/, classpath:/static/
     jpa:
         show-sql: true
         hibernate:
@@ -13,13 +16,6 @@ spring:
 
 # App-specific configuration
 app:
-    auth:
-        # Note: mobile-support is AUTO-CONFIGURED based on ENV variable (.env file)
-        # ENV=prod -> mobile-support=OFF (cookies-only, better security)
-        # ENV=staging/dev -> mobile-support=ON (headers+cookies, mobile testing)
-        #
-        # WHY auto-config? Security decisions should be centralized in .env
-        # with other sensitive configs (DB, JWT secrets), not scattered
     jwt:
         # Token expiration times (in milliseconds)
         expiration:
@@ -45,11 +41,6 @@ app:
             enabled: true
             # Max request body size to log (prevent huge log files)
             max-payload-length: 1000
-            # Note: headers/payload are AUTO-CONFIGURED based on ENV variable:
-            # ENV=prod -> headers=OFF, payload=OFF (security)
-            # ENV=staging -> headers=ON, payload=OFF (auth debug)
-            # ENV=dev -> headers=ON, payload=ON (full debug)
-
 logging:
     exception-conversion-word: "%wEx{2}"
     level:

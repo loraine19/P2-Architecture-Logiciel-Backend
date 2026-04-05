@@ -165,7 +165,7 @@ public class UserService implements UserServiceImpl {
 
         String userLogin = this.jwtService.extractUsername(refreshToken, true);
         if (userLogin == null)
-            return errorResponse;
+            throw new IllegalArgumentException("Invalid or expired refresh token");
         UserDetails userDetails = this.userDetailsService.loadUserByUsername(userLogin);
         if (userDetails == null)
             return errorResponse;
@@ -204,7 +204,7 @@ public class UserService implements UserServiceImpl {
     }
 
     /* VALIDATE REFRESH TOKEN */
-    private boolean validateRefreshToken(String refreshToken) {
+    boolean validateRefreshToken(String refreshToken) {
         String userLogin = jwtService.extractUsername(refreshToken, true);
         if (userLogin == null)
             return errorFalseReturn("No userLogin");

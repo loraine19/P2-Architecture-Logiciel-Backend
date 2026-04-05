@@ -16,7 +16,9 @@ public final class SecurityConstants {
             "/api/logout",
             "/api/refresh",
             "/actuator/**",
-            "/error");
+            "/error",
+            "/",
+            "/index.html");
 
     // Verification endpoint
     public static boolean isPublicEndpoint(String requestURI) {

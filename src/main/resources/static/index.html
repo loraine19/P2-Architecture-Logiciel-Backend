@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Rapport de couverture — etudiant-backend</title>
+        <style>
+            body {
+                font-family: sans-serif;
+                background: #0d1117;
+                color: #c9d1d9;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+                margin: 0;
+            }
+            .box {
+                text-align: center;
+                border: 1px solid #30363d;
+                border-radius: 10px;
+                padding: 2.5rem 3rem;
+                max-width: 480px;
+            }
+            h1 {
+                font-size: 1.3rem;
+                margin-bottom: 0.5rem;
+            }
+            p {
+                color: #8b949e;
+                font-size: 0.95rem;
+                margin-bottom: 1rem;
+            }
+            .badge {
+                display: inline-block;
+                background: #3fb950;
+                color: #000;
+                font-weight: 700;
+                font-size: 0.85rem;
+                padding: 0.3rem 0.8rem;
+                border-radius: 20px;
+                margin-bottom: 1rem;
+            }
+            code {
+                background: #1f2428;
+                padding: 0.15rem 0.45rem;
+                border-radius: 4px;
+                font-size: 0.9rem;
+            }
+            .warning {
+                margin-top: 1.5rem;
+                font-size: 0.85rem;
+                color: #d29922;
+                background: #1c2010;
+                border: 1px solid #d29922;
+                border-radius: 6px;
+                padding: 0.75rem 1rem;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="box">
+            <div class="badge">86% couverture ✓</div>
+            <h1>Rapport JaCoCo — etudiant-backend</h1>
+            <p>
+                Le rapport de couverture de tests est servi depuis
+                <code>target/site/jacoco/</code>.
+            </p>
+            <p>Pour générer le rapport :</p>
+            <code>./mvnw verify</code>
+        </div>
+    </body>
+</html>

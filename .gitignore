@@ -43,3 +43,6 @@ logs/
 *.log
 pid.txt
 *.pid
+
+# Fichiers de suivi de progression (générés par IDE ou outils de développement)
+followProgress.md

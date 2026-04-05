@@ -6,6 +6,7 @@ import com.openclassrooms.etudiant.dto.UserDTO;
 import com.openclassrooms.etudiant.dto.dtoHelpers.AuthType;
 import com.openclassrooms.etudiant.dto.dtoHelpers.LoginResponse;
 import com.openclassrooms.etudiant.dto.dtoHelpers.MessageResp;
+import com.openclassrooms.etudiant.exception.GlobalExceptionHandler;
 import com.openclassrooms.etudiant.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -48,8 +49,10 @@ class UserControllerTest {
 
         @BeforeEach
         void setUp() {
-                /* INITIALIZE MOCKMVC WITHOUT SPRING CONTEXT */
-                mockMvc = MockMvcBuilders.standaloneSetup(userController).build();
+                /* INITIALIZE MOCKMVC WITHOUT SPRING CONTEXT + GLOBAL EXCEPTION HANDLER */
+                mockMvc = MockMvcBuilders.standaloneSetup(userController)
+                                .setControllerAdvice(new GlobalExceptionHandler())
+                                .build();
                 objectMapper = new ObjectMapper();
 
                 /* INITIALIZE VALID TEST DATA */
@@ -66,6 +69,7 @@ class UserControllerTest {
                 loginRequestDTO.setAuthType(AuthType.COOKIE);
         }
 
+        /** USER REGISTRATION */
         @Nested
         @DisplayName("POST /api/register - User Registration")
         class UserRegistrationEndpoint {
@@ -103,8 +107,24 @@ class UserControllerTest {
                                         .content(objectMapper.writeValueAsString(invalidUserDTO)))
                                         .andExpect(status().isBadRequest());
                 }
+
+                @Test
+                @DisplayName("Should return 400 when login already exists")
+                void shouldReturn400_WhenLoginAlreadyExists() throws Exception {
+                        /* ARRANGE - SERVICE THROWS DUPLICATE LOGIN */
+                        when(userService.register(any(UserDTO.class)))
+                                        .thenThrow(new IllegalArgumentException("Login already exists"));
+
+                        /* ACT AND ASSERT 400 BAD REQUEST */
+                        mockMvc.perform(post("/api/register")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(testUserDTO)))
+                                        .andExpect(status().isBadRequest())
+                                        .andExpect(jsonPath("$.errorCode").value("INVALID_ARGUMENT"));
+                }
         }
 
+        /** USER AUTHENTICATION */
         @Nested
         @DisplayName("POST /api/login - User Authentication")
         class UserAuthenticationEndpoint {
@@ -141,8 +161,61 @@ class UserControllerTest {
                                         .content(objectMapper.writeValueAsString(invalidLoginDTO)))
                                         .andExpect(status().isBadRequest());
                 }
+
+                @Test
+                @DisplayName("Should return 400 when credentials are invalid")
+                void shouldReturn400_WhenCredentialsAreInvalid() throws Exception {
+                        /* ARRANGE - SERVICE THROWS ON INVALID CREDENTIALS */
+                        when(userService.login(any(LoginRequestDTO.class), any(), any()))
+                                        .thenThrow(new IllegalArgumentException("Invalid login credentials"));
+
+                        /* ACT AND ASSERT 400 BAD REQUEST */
+                        mockMvc.perform(post("/api/login")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(loginRequestDTO)))
+                                        .andExpect(status().isBadRequest())
+                                        .andExpect(jsonPath("$.errorCode").value("INVALID_ARGUMENT"));
+                }
         }
 
+        /** USER REFRESH TOKEN */
+        @Nested
+        @DisplayName("POST /api/refresh - User Refresh Token")
+        class UserRefreshTokenEndpoint {
+
+                @Test
+                @DisplayName("Should refresh token successfully with valid refresh token")
+                void shouldRefreshToken_WhenRefreshTokenIsValid() throws Exception {
+                        /* ARRANGE MOCK RESPONSE */
+                        MessageResp successResponse = MessageResp.success("Token refreshed successfully");
+                        when(userService.refresh(any(), any(), any()))
+                                        .thenReturn(successResponse);
+
+                        /* ACT AND ASSERT 200 OK */
+                        mockMvc.perform(post("/api/refresh")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString("valid.refresh.token")))
+                                        .andExpect(status().isOk())
+                                        .andExpect(jsonPath("$.message").value("Token refreshed successfully"));
+                }
+
+                @Test
+                @DisplayName("Should return 400 when refresh token is invalid")
+                void shouldReturn400_WhenRefreshTokenIsInvalid() throws Exception {
+                        /* ARRANGE - SERVICE THROWS ON INVALID TOKEN */
+                        when(userService.refresh(any(), any(), any()))
+                                        .thenThrow(new IllegalArgumentException("Invalid or expired refresh token"));
+
+                        /* ACT AND ASSERT 400 BAD REQUEST */
+                        mockMvc.perform(post("/api/refresh")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString("invalid.refresh.token")))
+                                        .andExpect(status().isBadRequest());
+                }
+
+        }
+
+        /** USER LOGOUT */
         @Nested
         @DisplayName("POST /api/logout - User Logout")
         class UserLogoutEndpoint {

@@ -15,6 +15,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.LocalDateTime;
@@ -120,6 +121,16 @@ public class GlobalExceptionHandler {
                 "RESOURCE_NOT_FOUND",
                 "The requested resource was not found: " + ex.getResourcePath(),
                 HttpStatus.NOT_FOUND, request);
+    }
+
+    /* TYPE MISMATCH - e.g. non-numeric path variable where Long is expected */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorDetails> handleTypeMismatch(MethodArgumentTypeMismatchException ex,
+            WebRequest request) {
+        return createErrorResponse(
+                "TYPE_MISMATCH",
+                "Invalid value '" + ex.getValue() + "' for parameter '" + ex.getName() + "'",
+                HttpStatus.BAD_REQUEST, request);
     }
 
     /* ILLEGAL ARGUMENT */
