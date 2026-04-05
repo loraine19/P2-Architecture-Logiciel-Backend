@@ -1,6 +1,6 @@
 package com.openclassrooms.etudiant.service;
 
-import com.openclassrooms.etudiant.service.interfaces.JwtServiceInterface;
+import com.openclassrooms.etudiant.service.interfaces.JwtServiceImp;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -19,7 +19,7 @@ import java.util.Date;
 
 @Service
 @Slf4j
-public class JwtService implements JwtServiceInterface {
+public class JwtService implements JwtServiceImp {
 
     @Value("${JWT_SECRET}")
     private String jwtSecret;

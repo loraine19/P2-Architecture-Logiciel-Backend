@@ -2,7 +2,7 @@ package com.openclassrooms.etudiant.service;
 
 import com.openclassrooms.etudiant.entities.Student;
 import com.openclassrooms.etudiant.repository.StudentRepository;
-import com.openclassrooms.etudiant.service.interfaces.StudentServiceInterface;
+import com.openclassrooms.etudiant.service.interfaces.StudentServiceImpl;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +21,7 @@ import java.util.List;
 @Transactional
 @RequiredArgsConstructor
 @Slf4j
-public class StudentService implements StudentServiceInterface {
+public class StudentService implements StudentServiceImpl {
 
     private final StudentRepository studentRepository;
 

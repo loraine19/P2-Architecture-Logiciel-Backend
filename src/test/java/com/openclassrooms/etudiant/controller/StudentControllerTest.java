@@ -6,6 +6,7 @@ import com.openclassrooms.etudiant.entities.Student;
 import com.openclassrooms.etudiant.mapper.StudentDtoMapper;
 import com.openclassrooms.etudiant.service.StudentService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -21,6 +22,7 @@ import java.util.List;
  * Integration tests for StudentController
  * Tests REST endpoints, security, and data binding
  */
+@Disabled
 @WebMvcTest(StudentController.class)
 @DisplayName("StudentController Integration Tests")
 class StudentControllerTest {

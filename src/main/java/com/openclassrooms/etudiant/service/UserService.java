@@ -10,7 +10,7 @@ import com.openclassrooms.etudiant.dto.dtoHelpers.MessageResp;
 import com.openclassrooms.etudiant.entities.User;
 import com.openclassrooms.etudiant.mapper.UserDtoMapper;
 import com.openclassrooms.etudiant.repository.UserRepository;
-import com.openclassrooms.etudiant.service.interfaces.UserServiceInterface;
+import com.openclassrooms.etudiant.service.interfaces.UserServiceImpl;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -38,7 +38,7 @@ import java.util.Optional;
 @Transactional
 @RequiredArgsConstructor
 @Slf4j
-public class UserService implements UserServiceInterface {
+public class UserService implements UserServiceImpl {
     // Dependencies
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -130,7 +130,7 @@ public class UserService implements UserServiceInterface {
         String responseRefreshToken = (authType == AuthType.HEADER) ? refreshToken : null;
 
         LoginResponse successResponse = LoginResponse.success(
-                "' logged in successfully",
+                "Logged in successfully",
                 userProfile,
                 authType,
                 responseRefreshToken);

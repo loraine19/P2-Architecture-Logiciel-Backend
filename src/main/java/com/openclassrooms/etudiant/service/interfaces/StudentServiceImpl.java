@@ -8,7 +8,7 @@ import java.util.List;
  * Service interface for student management operations
  * Defines contracts for CRUD operations on student entities
  */
-public interface StudentServiceInterface {
+public interface StudentServiceImpl {
 
     List<Student> getAllStudents();
 

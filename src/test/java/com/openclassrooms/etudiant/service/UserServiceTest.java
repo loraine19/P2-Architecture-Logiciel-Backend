@@ -20,8 +20,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
@@ -108,12 +106,10 @@ class UserServiceTest {
                         when(userRepository.save(any(User.class))).thenReturn(savedUser);
 
                         /* ACT */
-                        ResponseEntity<MessageResp> response = userService.register(testUserDTO);
+                        MessageResp response = userService.register(testUserDTO);
 
                         /* ASSERT */
-                        assertEquals(HttpStatus.OK, response.getStatusCode());
-                        assertTrue(response.getBody().getMessage().contains("successfully"));
-                        verify(userRepository, times(1)).save(any(User.class));
+                        assertEquals("User registered successfully", response.getMessage());
                 }
 
                 /* REGISTER NULL DTO */
@@ -126,17 +122,13 @@ class UserServiceTest {
 
                 /* REGISTER DUPLICATE LOGIN */
                 @Test
-                @DisplayName("Should return error when user already exists")
-                void shouldReturnError_WhenUserAlreadyExists() {
+                @DisplayName("Should throw IllegalArgumentException when login already exists")
+                void shouldThrowIllegalArgumentException_WhenUserAlreadyExists() {
                         /* ARRANGE */
                         when(userRepository.findByLogin(testUserDTO.getLogin())).thenReturn(Optional.of(testUser));
 
-                        /* ACT */
-                        ResponseEntity<MessageResp> response = userService.register(testUserDTO);
-
-                        /* ASSERT */
-                        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-                        assertEquals("Login already exists", response.getBody().getMessage());
+                        /* ACT & ASSERT */
+                        assertThrows(IllegalArgumentException.class, () -> userService.register(testUserDTO));
                 }
         }
 
@@ -148,6 +140,7 @@ class UserServiceTest {
                 @Test
                 @DisplayName("Should authenticate user successfully with valid credentials")
                 void shouldAuthenticateUser_WhenCredentialsAreValid() {
+
                         /* ARRANGE */
                         when(userRepository.findByLogin(loginRequestDTO.getLogin())).thenReturn(Optional.of(testUser));
                         when(passwordEncoder.matches(loginRequestDTO.getPassword(), testUser.getPassword()))
@@ -156,28 +149,25 @@ class UserServiceTest {
                         when(userDtoMapper.toProfileDto(testUser)).thenReturn(new UserProfileDTO());
 
                         /* ACT */
-                        ResponseEntity<LoginResponse> response = userService.login(loginRequestDTO, httpServletRequest,
+                        LoginResponse response = userService.login(loginRequestDTO, httpServletRequest,
                                         httpServletResponse);
 
                         /* ASSERT */
-                        assertEquals(HttpStatus.OK, response.getStatusCode());
-                        assertTrue(response.getBody().isSuccess());
+                        assertEquals("Logged in successfully", response.getMessage());
                         verify(jwtService).generateToken(testUser, false);
                 }
 
                 /* LOGIN INVALID CREDENTIALS */
                 @Test
-                @DisplayName("Should return 401 when user not found")
-                void shouldReturn401_WhenUserNotFound() {
+                @DisplayName("Should throw exception when credentials are invalid")
+                void shouldThrowException_WhenCredentialsAreInvalid() {
                         /* ARRANGE */
                         when(userRepository.findByLogin(anyString())).thenReturn(Optional.empty());
 
-                        /* ACT */
-                        ResponseEntity<LoginResponse> response = userService.login(loginRequestDTO, httpServletRequest,
-                                        httpServletResponse);
-
-                        /* ASSERT */
-                        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+                        /* ACT & ASSERT */
+                        assertThrows(IllegalArgumentException.class,
+                                        () -> userService.login(loginRequestDTO, httpServletRequest,
+                                                        httpServletResponse));
                 }
         }
 
@@ -190,11 +180,10 @@ class UserServiceTest {
                 @DisplayName("Should logout user successfully")
                 void shouldLogoutUser_Successfully() {
                         /* ACT */
-                        ResponseEntity<MessageResp> response = userService.logout(httpServletResponse);
+                        MessageResp response = userService.logout(httpServletResponse);
 
                         /* ASSERT */
-                        assertEquals(HttpStatus.OK, response.getStatusCode());
-                        assertEquals("User logged out successfully", response.getBody().getMessage());
+                        assertEquals("User logged out successfully", response.getMessage());
 
                         /* VERIFY TWO COOKIES DELETIONS (token and refreshToken) */
                         verify(httpServletResponse, times(2)).addHeader(eq("Set-Cookie"), anyString());

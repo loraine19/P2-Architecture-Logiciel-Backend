@@ -12,7 +12,7 @@ import jakarta.servlet.http.HttpServletResponse;
  * Service interface for user authentication and management
  * Defines business operations for user registration and authentication
  */
-public interface UserServiceInterface {
+public interface UserServiceImpl {
 
     MessageResp register(UserDTO userDTO);
 

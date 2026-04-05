@@ -16,7 +16,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -77,7 +76,7 @@ class UserControllerTest {
                         /* ARRANGE MOCK RESPONSE */
                         MessageResp successResponse = MessageResp.success("User registered successfully");
                         when(userService.register(any(UserDTO.class)))
-                                        .thenReturn(ResponseEntity.ok(successResponse));
+                                        .thenReturn(successResponse);
 
                         /* ACT AND ASSERT 200 OK */
                         mockMvc.perform(post("/api/register")
@@ -118,7 +117,7 @@ class UserControllerTest {
                                         AuthType.COOKIE,
                                         null);
                         when(userService.login(any(LoginRequestDTO.class), any(), any()))
-                                        .thenReturn(ResponseEntity.ok(successResponse));
+                                        .thenReturn(successResponse);
 
                         /* ACT AND ASSERT 200 OK */
                         mockMvc.perform(post("/api/login")
@@ -154,7 +153,7 @@ class UserControllerTest {
                         /* ARRANGE MOCK RESPONSE */
                         MessageResp successResponse = MessageResp.success("User logged out successfully");
                         when(userService.logout(any()))
-                                        .thenReturn(ResponseEntity.ok(successResponse));
+                                        .thenReturn(successResponse);
 
                         /* ACT AND ASSERT 200 OK */
                         mockMvc.perform(post("/api/logout"))

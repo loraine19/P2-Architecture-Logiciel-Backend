@@ -17,7 +17,7 @@ import org.springframework.security.core.userdetails.UserDetails;
  * @author OpenClassrooms
  * @version 1.0
  */
-public interface JwtServiceInterface {
+public interface JwtServiceImp {
     /* ACCESS */
     String generateToken(UserDetails userDetails, Boolean isRefresh);
 
