@@ -27,112 +27,115 @@ import static org.mockito.Mockito.*;
 @DisplayName("CustomUserDetailService Unit Tests")
 class CustomUserDetailServiceTest {
 
-    @Mock
-    private UserRepository userRepository;
+        @Mock
+        private UserRepository userRepository;
 
-    @InjectMocks
-    private CustomUserDetailService customUserDetailService;
+        @InjectMocks
+        private CustomUserDetailService customUserDetailService;
 
-    private User testUser;
+        private User testUser;
 
-    @BeforeEach
-    void setUp() {
-        testUser = User.builder()
-                .id(1L)
-                .login("jean.dupont@example.com")
-                .password("encodedPassword")
-                .build();
-    }
-
-    /** LOAD USER BY USERNAME */
-    @Nested
-    @DisplayName("loadUserByUsername - User Loading by Login")
-    class LoadUserByUsernameTests {
-
-        /* SUCCESS PATH */
-        @Test
-        @DisplayName("Should return UserDetails when login is valid and user exists")
-        void shouldReturnUserDetails_WhenLoginIsValid() {
-            /* ARRANGE */
-            when(userRepository.findByLogin("jean.dupont@example.com"))
-                    .thenReturn(Optional.of(testUser));
-
-            /* ACT */
-            UserDetails result = customUserDetailService
-                    .loadUserByUsername("jean.dupont@example.com");
-
-            /* ASSERT */
-            assertNotNull(result);
-            assertEquals("jean.dupont@example.com", result.getUsername());
-            verify(userRepository).findByLogin("jean.dupont@example.com");
+        @BeforeEach
+        void setUp() {
+                testUser = User.builder()
+                                .id(1L)
+                                .login("jean.dupont@example.com")
+                                .password("encodedPassword")
+                                .build();
         }
 
-        /* TRIM PATH */
-        @Test
-        @DisplayName("Should trim whitespace from login before querying database")
-        void shouldTrimLogin_BeforeQueryingDatabase() {
-            /* ARRANGE */
-            when(userRepository.findByLogin("jean.dupont@example.com"))
-                    .thenReturn(Optional.of(testUser));
+        /** LOAD USER BY USERNAME */
+        @Nested
+        @DisplayName("loadUserByUsername - User Loading by Login")
+        class LoadUserByUsernameTests {
 
-            /* ACT - Pass login with surrounding spaces */
-            UserDetails result = customUserDetailService
-                    .loadUserByUsername("  jean.dupont@example.com  ");
+                /* SUCCESS PATH */
+                @Test
+                @DisplayName("Should return UserDetails when login is valid and user exists")
+                void shouldReturnUserDetails_WhenLoginIsValid() {
+                        /* ARRANGE */
+                        when(userRepository.findByLogin("jean.dupont@example.com"))
+                                        .thenReturn(Optional.of(testUser));
 
-            /* ASSERT - trimmed value is passed to repository */
-            assertNotNull(result);
-            verify(userRepository).findByLogin("jean.dupont@example.com");
+                        /* ACT */
+                        UserDetails result = customUserDetailService
+                                        .loadUserByUsername("jean.dupont@example.com");
+
+                        /* ASSERT */
+                        // not nul
+                        assertNotNull(result);
+                        // username matches login
+                        assertEquals("jean.dupont@example.com", result.getUsername());
+                        // method called with correct login
+                        verify(userRepository).findByLogin("jean.dupont@example.com");
+                }
+
+                /* TRIM PATH */
+                @Test
+                @DisplayName("Should trim whitespace from login before querying database")
+                void shouldTrimLogin_BeforeQueryingDatabase() {
+                        /* ARRANGE */
+                        when(userRepository.findByLogin("jean.dupont@example.com"))
+                                        .thenReturn(Optional.of(testUser));
+
+                        /* ACT - Pass login with surrounding spaces */
+                        UserDetails result = customUserDetailService
+                                        .loadUserByUsername("  jean.dupont@example.com  ");
+
+                        /* ASSERT - trimmed value is passed to repository */
+                        assertNotNull(result);
+                        verify(userRepository).findByLogin("jean.dupont@example.com");
+                }
+
+                /* NULL LOGIN */
+                @Test
+                @DisplayName("Should throw UsernameNotFoundException when login is null")
+                void shouldThrowUsernameNotFoundException_WhenLoginIsNull() {
+                        /* ACT & ASSERT */
+                        assertThrows(UsernameNotFoundException.class,
+                                        () -> customUserDetailService.loadUserByUsername(null));
+
+                        /* VERIFY - database must not be queried for null login */
+                        verifyNoInteractions(userRepository);
+                }
+
+                /* EMPTY LOGIN */
+                @Test
+                @DisplayName("Should throw UsernameNotFoundException when login is empty string")
+                void shouldThrowUsernameNotFoundException_WhenLoginIsEmpty() {
+                        /* ACT & ASSERT */
+                        assertThrows(UsernameNotFoundException.class,
+                                        () -> customUserDetailService.loadUserByUsername(""));
+
+                        /* VERIFY - database must not be queried for empty login */
+                        verifyNoInteractions(userRepository);
+                }
+
+                /* BLANK (WHITESPACE-ONLY) LOGIN */
+                @Test
+                @DisplayName("Should throw UsernameNotFoundException when login is whitespace only")
+                void shouldThrowUsernameNotFoundException_WhenLoginIsBlank() {
+                        /* ACT & ASSERT - whitespace gets trimmed to empty, guard fires */
+                        assertThrows(UsernameNotFoundException.class,
+                                        () -> customUserDetailService.loadUserByUsername("   "));
+
+                        /* VERIFY - database must not be queried for blank login */
+                        verifyNoInteractions(userRepository);
+                }
+
+                /* USER NOT FOUND IN DB */
+                @Test
+                @DisplayName("Should throw UsernameNotFoundException when user is not found in database")
+                void shouldThrowUsernameNotFoundException_WhenUserNotFound() {
+                        /* ARRANGE */
+                        when(userRepository.findByLogin("unknown@example.com"))
+                                        .thenReturn(Optional.empty());
+
+                        /* ACT & ASSERT */
+                        assertThrows(UsernameNotFoundException.class,
+                                        () -> customUserDetailService.loadUserByUsername("unknown@example.com"));
+
+                        verify(userRepository).findByLogin("unknown@example.com");
+                }
         }
-
-        /* NULL LOGIN */
-        @Test
-        @DisplayName("Should throw UsernameNotFoundException when login is null")
-        void shouldThrowUsernameNotFoundException_WhenLoginIsNull() {
-            /* ACT & ASSERT */
-            assertThrows(UsernameNotFoundException.class,
-                    () -> customUserDetailService.loadUserByUsername(null));
-
-            /* VERIFY - database must not be queried for null login */
-            verifyNoInteractions(userRepository);
-        }
-
-        /* EMPTY LOGIN */
-        @Test
-        @DisplayName("Should throw UsernameNotFoundException when login is empty string")
-        void shouldThrowUsernameNotFoundException_WhenLoginIsEmpty() {
-            /* ACT & ASSERT */
-            assertThrows(UsernameNotFoundException.class,
-                    () -> customUserDetailService.loadUserByUsername(""));
-
-            /* VERIFY - database must not be queried for empty login */
-            verifyNoInteractions(userRepository);
-        }
-
-        /* BLANK (WHITESPACE-ONLY) LOGIN */
-        @Test
-        @DisplayName("Should throw UsernameNotFoundException when login is whitespace only")
-        void shouldThrowUsernameNotFoundException_WhenLoginIsBlank() {
-            /* ACT & ASSERT - whitespace gets trimmed to empty, guard fires */
-            assertThrows(UsernameNotFoundException.class,
-                    () -> customUserDetailService.loadUserByUsername("   "));
-
-            /* VERIFY - database must not be queried for blank login */
-            verifyNoInteractions(userRepository);
-        }
-
-        /* USER NOT FOUND IN DB */
-        @Test
-        @DisplayName("Should throw UsernameNotFoundException when user is not found in database")
-        void shouldThrowUsernameNotFoundException_WhenUserNotFound() {
-            /* ARRANGE */
-            when(userRepository.findByLogin("unknown@example.com"))
-                    .thenReturn(Optional.empty());
-
-            /* ACT & ASSERT */
-            assertThrows(UsernameNotFoundException.class,
-                    () -> customUserDetailService.loadUserByUsername("unknown@example.com"));
-
-            verify(userRepository).findByLogin("unknown@example.com");
-        }
-    }
 }

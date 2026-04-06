@@ -44,6 +44,7 @@ class GlobalExceptionHandlerTest {
     @DisplayName("handleEntityNotFound - EntityNotFoundException → 404")
     class EntityNotFoundTests {
 
+        @SuppressWarnings("null")
         @Test
         @DisplayName("Should return 404 with ENTITY_NOT_FOUND error code")
         void shouldReturn404_WithEntityNotFoundCode() {
@@ -59,6 +60,7 @@ class GlobalExceptionHandlerTest {
             assertEquals("Student not found", response.getBody().getMessage());
         }
 
+        @SuppressWarnings("null")
         @Test
         @DisplayName("Should return fallback message when exception message is null")
         void shouldReturnFallbackMessage_WhenExceptionMessageIsNull() {
@@ -79,6 +81,7 @@ class GlobalExceptionHandlerTest {
     @DisplayName("handleDatabaseErrors - DataIntegrityViolationException")
     class DatabaseErrorTests {
 
+        @SuppressWarnings("null")
         @Test
         @DisplayName("Should return 409 CONFLICT when a UNIQUE constraint is violated")
         void shouldReturn409_WhenUniqueConstraintViolated() {
@@ -95,6 +98,7 @@ class GlobalExceptionHandlerTest {
             assertEquals("DUPLICATE_ENTRY", response.getBody().getErrorCode());
         }
 
+        @SuppressWarnings("null")
         @Test
         @DisplayName("Should return 409 CONFLICT when a Duplicate key exception occurs")
         void shouldReturn409_WhenDuplicateKeyException() {
@@ -111,6 +115,7 @@ class GlobalExceptionHandlerTest {
             assertEquals("DUPLICATE_ENTRY", response.getBody().getErrorCode());
         }
 
+        @SuppressWarnings("null")
         @Test
         @DisplayName("Should return 422 UNPROCESSABLE_ENTITY for other constraint violations")
         void shouldReturn422_WhenOtherConstraintViolated() {
@@ -133,6 +138,7 @@ class GlobalExceptionHandlerTest {
     @DisplayName("handleAuthenticationErrors - Authentication exceptions → 401")
     class AuthenticationErrorTests {
 
+        @SuppressWarnings("null")
         @Test
         @DisplayName("Should return 401 for BadCredentialsException")
         void shouldReturn401_ForBadCredentialsException() {
@@ -154,6 +160,7 @@ class GlobalExceptionHandlerTest {
     @DisplayName("handleAccessDenied - AccessDeniedException → 403")
     class AccessDeniedTests {
 
+        @SuppressWarnings("null")
         @Test
         @DisplayName("Should return 403 FORBIDDEN for AccessDeniedException")
         void shouldReturn403_ForAccessDeniedException() {
@@ -176,6 +183,7 @@ class GlobalExceptionHandlerTest {
     @DisplayName("handleMethodNotSupported - HttpRequestMethodNotSupportedException → 405")
     class MethodNotSupportedTests {
 
+        @SuppressWarnings("null")
         @Test
         @DisplayName("Should return 405 and include the unsupported method name in message")
         void shouldReturn405_WithMethodNameInMessage() {
@@ -197,6 +205,7 @@ class GlobalExceptionHandlerTest {
     @DisplayName("handleIllegalArgument - IllegalArgumentException → 400")
     class IllegalArgumentTests {
 
+        @SuppressWarnings("null")
         @Test
         @DisplayName("Should return 400 with INVALID_ARGUMENT error code")
         void shouldReturn400_WithInvalidArgumentCode() {
@@ -212,6 +221,7 @@ class GlobalExceptionHandlerTest {
             assertEquals("Invalid value provided", response.getBody().getMessage());
         }
 
+        @SuppressWarnings("null")
         @Test
         @DisplayName("Should return fallback message when IllegalArgumentException message is null")
         void shouldReturnFallbackMessage_WhenMessageIsNull() {
@@ -232,6 +242,7 @@ class GlobalExceptionHandlerTest {
     @DisplayName("handleRuntimeException - RuntimeException → 500")
     class RuntimeExceptionTests {
 
+        @SuppressWarnings("null")
         @Test
         @DisplayName("Should return 500 INTERNAL_SERVER_ERROR for RuntimeException")
         void shouldReturn500_ForRuntimeException() {
@@ -252,6 +263,7 @@ class GlobalExceptionHandlerTest {
     @DisplayName("handleGenericException - Exception → 500")
     class GenericExceptionTests {
 
+        @SuppressWarnings("null")
         @Test
         @DisplayName("Should return 500 INTERNAL_SERVER_ERROR for any unhandled Exception")
         void shouldReturn500_ForGenericException() throws Exception {
