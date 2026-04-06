@@ -3,6 +3,9 @@
 # Script to start the Spring Boot development server with automatic restart
 # Usage: ./server.sh [start|stop|restart|status]
 
+export JAVA_HOME=/home/loraine/.jdk/jdk-25
+export PATH="$JAVA_HOME/bin:$PATH"
+
 case "$1" in
     start|"")
         echo "🚀 Starting Spring Boot development server with auto-restart..."
@@ -10,7 +13,7 @@ case "$1" in
         echo "🔗 Server will be available at: http://localhost:8080"
         echo "⏹️  Press Ctrl+C to stop"
         echo ""
-        mvn clean spring-boot:run
+        ./mvnw clean spring-boot:run
         ;;
     stop)
         echo "⏹️  Stopping Spring Boot server..."
