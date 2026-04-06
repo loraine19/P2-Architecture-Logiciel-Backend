@@ -18,10 +18,8 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 /**
- * Spring Security configuration class
- * Configures authentication provider, password encoding, and security filter
- * chain
- * Defines public endpoints and JWT authentication filter
+ * Spring Security configuration.
+ * Defines the filter chain, authentication provider, and public endpoints.
  */
 
 @Configuration(proxyBeanMethods = false)
@@ -64,7 +62,7 @@ public class SpringSecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                // On utilise directement la liste statique de SecurityConstants
+                // use SecurityConstants to avoid duplicating the path list
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(SecurityConstants.PUBLIC_PATHS.toArray(new String[0])).permitAll()
                         .anyRequest().authenticated())
@@ -74,7 +72,7 @@ public class SpringSecurityConfig {
 
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(
                         (request, response, exception) -> {
-                            log.warn("Accès refusé sur {} : {}", request.getRequestURI(), exception.getMessage());
+                            log.warn("Access denied on {} : {}", request.getRequestURI(), exception.getMessage());
                             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Authentication required");
                         }));
 

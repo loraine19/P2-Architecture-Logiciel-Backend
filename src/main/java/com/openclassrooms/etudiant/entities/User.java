@@ -39,7 +39,6 @@ public class User implements UserDetails {
     @Column(name = "id")
     private Long id;
 
-    // Personal information
     @NotBlank(message = "First name is required")
     @Size(max = 50, message = "First name must not exceed 50 characters")
     @Column(name = "firstName", nullable = false)
@@ -50,7 +49,6 @@ public class User implements UserDetails {
     @Column(name = "lastName", nullable = false)
     private String lastName;
 
-    // Authentication credentials
     @NotBlank(message = "Login is required")
     @Size(max = 100, message = "Login must not exceed 100 characters")
     @Column(name = "login", unique = true, nullable = false)
@@ -61,7 +59,7 @@ public class User implements UserDetails {
     @Column(name = "password", nullable = false)
     private String password;
 
-    // Audit timestamps with consistent naming (camelCase)
+    // camelCase column names match front-end conventions
     @CreationTimestamp
     @Column(name = "createdAt")
     private LocalDateTime createdAt;
@@ -70,16 +68,13 @@ public class User implements UserDetails {
     @Column(name = "updatedAt")
     private LocalDateTime updatedAt;
 
-    // JwtRefreshToken
     @Column(name = "refreshToken", nullable = true)
     private String refreshToken;
 
-    // Spring Security UserDetails implementation
-
-    // No roles or authorities implemented yet - returns empty list
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(); // No roles implemented yet
+        // no roles implemented
+        return List.of();
     }
 
     @Override
@@ -87,7 +82,7 @@ public class User implements UserDetails {
         return login;
     }
 
-    // Not implementing account for now - all return true
+    // no account locking
     @Override
     public boolean isEnabled() {
         return true;

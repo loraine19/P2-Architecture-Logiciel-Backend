@@ -31,7 +31,6 @@ public class Student {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Personal information with international name support
     @NotBlank(message = "First name is required")
     @Size(min = 2, max = 50, message = "First name must be between 2 and 50 characters")
     @Pattern(regexp = "^[a-zA-ZÀ-ÿ\\s'-]+$", message = "First name can only contain letters, spaces, hyphens, and apostrophes")
@@ -44,19 +43,17 @@ public class Student {
     @Column(name = "lastName", nullable = false)
     private String lastName;
 
-    // Contact information with robust validation
     @NotBlank(message = "Email is required")
     @Email(message = "Email must be a valid email address")
     @Size(max = 100, message = "Email must not exceed 100 characters")
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
-    // Optional phone with French/international format support
+    // optional field
     @Pattern(regexp = "^[+]?[0-9\\s\\-().]{10,20}$", message = "Phone number should be valid (10-20 digits with optional formatting)")
     @Column(name = "phoneNumber")
     private String phoneNumber;
 
-    // Address information
     @NotBlank(message = "Address is required")
     @Size(max = 200, message = "Address must not exceed 200 characters")
     @Column(name = "address")
@@ -72,7 +69,7 @@ public class Student {
     @Column(name = "zipCode")
     private String zipCode;
 
-    // Audit timestamps with consistent naming (camelCase)
+    // camelCase column names match front-end conventions
     @CreationTimestamp
     @Column(name = "createdAt")
     private LocalDateTime createdAt;

@@ -20,7 +20,8 @@ public class AppConfig {
     public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
         PropertySourcesPlaceholderConfigurer configurer = new PropertySourcesPlaceholderConfigurer();
         configurer.setLocation(new FileSystemResource(".env"));
-        configurer.setIgnoreResourceNotFound(true); // Don't fail if .env missing
+        // docker deployments use env vars directly, .env may not exist
+        configurer.setIgnoreResourceNotFound(true);
         return configurer;
     }
 }

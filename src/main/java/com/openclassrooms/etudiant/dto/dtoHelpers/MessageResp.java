@@ -18,7 +18,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class MessageResp {
 
-    // Response message - informative text for client
     @NotBlank(message = "Message is required")
     @Size(max = 500, message = "Message must not exceed 500 characters")
     private String message;

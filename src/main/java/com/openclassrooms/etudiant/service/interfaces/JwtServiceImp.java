@@ -5,17 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.core.userdetails.UserDetails;
 
 /**
- * JWT Service Interface
- * Defines contract for JWT token management operations
- * 
- * This interface provides methods for:
- * - Token generation (access and refresh tokens)
- * - Token validation and verification
- * - Token extraction from requests
- * - User authentication through JWT
- * 
- * @author OpenClassrooms
- * @version 1.0
+ * JWT service contract for token generation, validation, and extraction.
  */
 public interface JwtServiceImp {
     /* ACCESS */

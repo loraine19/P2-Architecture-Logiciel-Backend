@@ -19,7 +19,6 @@ import org.springframework.web.filter.CommonsRequestLoggingFilter;
 @Configuration
 public class RequestLoggingFilterConfig {
 
-    // Auto-determine logging config based on environment
     @Value("${ENV:dev}")
     private String environment;
 
@@ -33,20 +32,17 @@ public class RequestLoggingFilterConfig {
     public CommonsRequestLoggingFilter commonsRequestLoggingFilter() {
         CommonsRequestLoggingFilter filter = new CommonsRequestLoggingFilter();
 
-        // Auto-configure based on environment
         boolean includeHeaders = determineIncludeHeaders();
         boolean includePayload = determineIncludePayload();
 
-        // Basic request info (always safe to log)
+        // query string and client IP are safe in all envs
         filter.setIncludeQueryString(true);
         filter.setIncludeClientInfo(true);
 
-        // Environment-based configuration
         filter.setIncludePayload(includePayload);
         filter.setIncludeHeaders(includeHeaders);
         filter.setMaxPayloadLength(maxPayloadLength);
 
-        // Custom prefix with environment info
         filter.setAfterMessagePrefix("[" + environment.toUpperCase() + "] HTTP_REQUEST: ");
         filter.setBeforeMessagePrefix("[" + environment.toUpperCase() + "] HTTP_REQUEST_START: ");
 

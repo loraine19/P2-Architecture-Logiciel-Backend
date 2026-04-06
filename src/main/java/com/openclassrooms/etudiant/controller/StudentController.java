@@ -66,7 +66,7 @@ public class StudentController {
     public ResponseEntity<StudentDTO> updateStudent(@PathVariable Long id, @Valid @RequestBody StudentDTO studentDTO) {
         Student studentRequest = studentMapper.toEntity(studentDTO);
 
-        // Check for ID mismatch - basic validation
+        // reject if path and body IDs differ — prevents accidental overwrites
         if (studentRequest.getId() != null && !studentRequest.getId().equals(id)) {
             log.warn("ID mismatch: path={}, body={}", id, studentRequest.getId());
             return ResponseEntity.badRequest().build();

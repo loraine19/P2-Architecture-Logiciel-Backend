@@ -19,15 +19,13 @@ public class CustomUserDetailService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String login) throws UsernameNotFoundException {
-        // Clean the login
         String cleanLogin = (login == null) ? "" : login.trim();
 
-        // Guard clause: If empty, don't even query the database
+        // avoid DB query on empty input
         if (cleanLogin.isEmpty()) {
             throw new UsernameNotFoundException("Login is empty");
         }
 
-        // Functional search (One-liner)
         return userRepository.findByLogin(cleanLogin)
                 .orElseThrow(() -> {
                     log.warn("Unknown user: {}", cleanLogin);

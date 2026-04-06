@@ -123,7 +123,7 @@ public class GlobalExceptionHandler {
                 HttpStatus.NOT_FOUND, request);
     }
 
-    /* TYPE MISMATCH - e.g. non-numeric path variable where Long is expected */
+    /* TYPE MISMATCH */
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ErrorDetails> handleTypeMismatch(MethodArgumentTypeMismatchException ex,
             WebRequest request) {
@@ -163,7 +163,7 @@ public class GlobalExceptionHandler {
 
     /* PRIVATE HELPER METHODS */
 
-    /* Create standardized error response */
+    /* CREATE ERROR RESPONSE */
     private ResponseEntity<ErrorDetails> createErrorResponse(String errorCode, String message,
             HttpStatus status, WebRequest request) {
 
@@ -185,7 +185,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorDetails, status);
     }
 
-    /* Extract path from WebRequest for error details */
+    /* EXTRACT PATH */
     private String extractPath(WebRequest request) {
         String description = request.getDescription(false);
         return description.startsWith("uri=") ? description.substring(4) : description;

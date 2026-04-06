@@ -14,18 +14,15 @@ import lombok.Data;
 @Data
 public class LoginRequestDTO {
 
-    // Login field with email validation (consistent with registration)
     @NotBlank(message = "Login is required")
     @Size(min = 3, max = 100, message = "Login must be between 3 and 100 characters")
     @Email(message = "Login must be a valid email address")
     private String login;
 
-    // Password field - validated but not exposed in logs for security
     @NotBlank(message = "Password is required")
     @Size(min = 8, max = 72, message = "Password must be between 8 and 72 characters")
     private String password;
 
-    // Remember me option for extended session (optional)
     private boolean rememberMe;
 
     private AuthType authType = AuthType.COOKIE;

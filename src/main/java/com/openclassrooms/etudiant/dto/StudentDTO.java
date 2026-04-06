@@ -19,10 +19,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class StudentDTO {
 
-    // ID field - optional for creation, required for updates
     private Long id;
 
-    // Personal info with basic validation
     @NotBlank(message = "First name is required")
     @Size(min = 2, max = 50, message = "First name must be between 2 and 50 characters")
     private String firstName;
@@ -31,17 +29,15 @@ public class StudentDTO {
     @Size(min = 2, max = 50, message = "Last name must be between 2 and 50 characters")
     private String lastName;
 
-    // Contact info with format validation
     @NotBlank(message = "Email is required")
     @Email(message = "Email should be valid")
     @Size(max = 100, message = "Email must not exceed 100 characters")
     private String email;
 
-    // Phone number - optional but validated if provided
+    // optional field
     @Pattern(regexp = "^[+]?[0-9\\s\\-().]{10,20}$", message = "Phone number should be valid (10-20 digits with optional formatting)")
     private String phoneNumber;
 
-    // Address information
     @NotBlank(message = "Address is required")
     @Size(max = 200, message = "Address must not exceed 200 characters")
     private String address;

@@ -12,7 +12,4 @@ import org.springframework.context.annotation.Configuration;
         "com.openclassrooms.etudiant.mapper"
 })
 public class MapperConfig {
-    // Configuration class to explicitly scan mapper package
-    // This ensures MapStruct generated implementations are detected as Spring
-    // components
 }

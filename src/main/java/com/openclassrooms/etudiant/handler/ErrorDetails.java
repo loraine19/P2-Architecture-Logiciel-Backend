@@ -20,17 +20,15 @@ import java.util.Map;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ErrorDetails {
-    
-    // Error timing and identification
+
     private LocalDateTime timestamp;
     private int status;
     private String error;
     private String errorCode;
-    
-    // Error description and location
+
     private String message;
     private String path;
-    
-    // Optional detailed field errors (for validation failures)
+
+    // null when no field-level validation errors
     private Map<String, String> validationErrors;
 }

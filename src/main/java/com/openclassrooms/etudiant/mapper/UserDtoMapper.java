@@ -14,17 +14,15 @@ import org.mapstruct.ReportingPolicy;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.ERROR)
 public interface UserDtoMapper {
 
-    @Mapping(target = "password", ignore = true) // Security: don't expose password in DTO
+    @Mapping(target = "password", ignore = true) // never expose password in DTO
     UserDTO toDto(User user);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "refreshToken", ignore = true) // Optional field - not in UserDTO yet
+    @Mapping(target = "refreshToken", ignore = true) // not part of UserDTO
     User toEntity(UserDTO userDTO);
 
-    // Convert User to UserProfileDTO for safe login response
-    // Only maps: id, login, firstName, lastName (password and audit fields excluded
-    // by design)
+    // password and audit fields are excluded by MapStruct — safe for login response
     UserProfileDTO toProfileDto(User user);
 }

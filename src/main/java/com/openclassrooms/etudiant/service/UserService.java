@@ -39,14 +39,12 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Slf4j
 public class UserService implements UserServiceImpl {
-    // Dependencies
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final UserDtoMapper userDtoMapper;
     private final CustomUserDetailService userDetailsService;
 
-    // Configuration from environment
     @Value("${ENV:dev}")
     private String env;
 
@@ -64,15 +62,12 @@ public class UserService implements UserServiceImpl {
         Assert.notNull(userDTO, "User data cannot be null");
         Assert.hasText(userDTO.getLogin(), "User login cannot be empty");
 
-        // Check for existing user
         if (userRepository.findByLogin(userDTO.getLogin()).isPresent())
             throw new IllegalArgumentException("Login already exists");
 
-        // Map DTO to entity and encrypt password
         User newUser = userDtoMapper.toEntity(userDTO);
         newUser.setPassword(passwordEncoder.encode(userDTO.getPassword()));
 
-        // Save to database
         User savedUser = userRepository.save(newUser);
         if (savedUser == null || savedUser.getId() == null)
             throw new IllegalStateException("User registration failed");
@@ -89,44 +84,40 @@ public class UserService implements UserServiceImpl {
         Assert.hasText(loginRequestDTO.getLogin(), "Login cannot be empty");
         Assert.hasText(loginRequestDTO.getPassword(), "Password cannot be empty");
 
-        // Find and validate user
         Optional<User> userOptional = userRepository.findByLogin(loginRequestDTO.getLogin());
         if (userOptional.isEmpty())
             throw new IllegalArgumentException("Invalid login credentials");
 
         User user = userOptional.get();
 
-        // Verify password
         if (!passwordEncoder.matches(loginRequestDTO.getPassword(), user.getPassword()))
             throw new IllegalArgumentException("Invalid login credentials");
 
-        // Generate JWT token
         String jwtToken = jwtService.generateToken(user, false);
 
-        // Determine token destination
         AuthType authType = loginRequestDTO.getAuthType() != null ? loginRequestDTO.getAuthType() : AuthType.COOKIE;
 
-        // Generate refresh token if rememberMe is true
+        // only when rememberMe is requested
         String refreshToken = loginRequestDTO.isRememberMe() ? jwtService.generateToken(user, true) : null;
 
-        // if rememberMe is true, set hash refresh token in Database for future
+        // hash before storing to prevent exposure if DB is compromised
         if (refreshToken != null) {
             String hashedRefreshToken = hashWithSHA256(refreshToken);
             user.setRefreshToken(hashedRefreshToken);
             userRepository.save(user);
         }
 
-        // Set cookie or header based on auth type
+        // cookie or header based on client type
         if (authType == AuthType.COOKIE)
             setAuthCookie(response, jwtToken,
                     loginRequestDTO.isRememberMe(), refreshToken, false);
         else
             injectTokenIntoHeaders(request, response, jwtToken);
 
-        // Create user profile for response (without password)
+        // omit password from response
         UserProfileDTO userProfile = userDtoMapper.toProfileDto(user);
 
-        // Include refresh token in response only for header-based auth (mobile)
+        // token in body only for mobile clients (header auth)
         String responseRefreshToken = (authType == AuthType.HEADER) ? refreshToken : null;
 
         LoginResponse successResponse = LoginResponse.success(
@@ -140,7 +131,6 @@ public class UserService implements UserServiceImpl {
     /* LOGOUT USER */
     @Override
     public MessageResp logout(HttpServletResponse response) {
-        // Create cookie deletion response
         setAuthCookie(response, "", true, "", true);
         MessageResp logoutMessage = MessageResp.success("User logged out successfully");
         return logoutMessage;

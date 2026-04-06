@@ -17,5 +17,5 @@ public class UserProfileDTO {
     private String firstName;
     private String lastName;
 
-    // Note: password is NEVER included for security
+    // password never included
 }

@@ -52,7 +52,7 @@ public class StudentService implements StudentServiceImpl {
 
     /* GET BY EMAIL */
     @Override
-    // TODO verfi transactional read only
+    // TODO: verify @Transactional(readOnly=true) is appropriate here
     public Student getStudentByEmail(String email) {
         Assert.hasText(email, "Email cannot be empty");
         Student student = studentRepository.findByEmail(email)
@@ -69,14 +69,12 @@ public class StudentService implements StudentServiceImpl {
         Assert.notNull(student, "Student cannot be null");
         Assert.hasText(student.getEmail(), "Student email cannot be empty");
 
-        // Check for duplicate email
         if (studentRepository.findByEmail(student.getEmail()).isPresent()) {
             log.warn("Student creation failed - email already exists: {}", student.getEmail());
             throw new IllegalArgumentException(
                     "Another student already exists with email: " + student.getEmail());
         }
 
-        // Save student
         Student savedStudent = studentRepository.save(student);
         return savedStudent;
     }
@@ -87,10 +85,9 @@ public class StudentService implements StudentServiceImpl {
         Assert.notNull(id, "Student ID cannot be null");
         Assert.notNull(studentDetails, "Student details cannot be null");
 
-        // Get existing student
         Student existingStudent = getStudentById(id);
 
-        // Check for email conflicts (excluding current student)
+        // skip email conflict check if email is unchanged
         if (studentDetails.getEmail() != null &&
                 !studentDetails.getEmail().equals(existingStudent.getEmail())) {
             if (studentRepository.findByEmail(studentDetails.getEmail()).isPresent()) {
@@ -100,7 +97,6 @@ public class StudentService implements StudentServiceImpl {
             }
         }
 
-        // Update fields
         existingStudent.setFirstName(studentDetails.getFirstName());
         existingStudent.setLastName(studentDetails.getLastName());
         existingStudent.setEmail(studentDetails.getEmail());
@@ -109,7 +105,6 @@ public class StudentService implements StudentServiceImpl {
         existingStudent.setCity(studentDetails.getCity());
         existingStudent.setZipCode(studentDetails.getZipCode());
 
-        // Save updated student
         Student updatedStudent = studentRepository.save(existingStudent);
         return updatedStudent;
 
