@@ -1,6 +1,7 @@
 package com.openclassrooms.etudiant.service;
 
 import com.openclassrooms.etudiant.entities.Student;
+import com.openclassrooms.etudiant.enums.StudentErrorMessage;
 import com.openclassrooms.etudiant.repository.StudentRepository;
 import com.openclassrooms.etudiant.service.interfaces.StudentServiceImpl;
 import jakarta.persistence.EntityNotFoundException;
@@ -41,11 +42,11 @@ public class StudentService implements StudentServiceImpl {
     @Transactional(readOnly = true)
     @SuppressWarnings("null")
     public Student getStudentById(Long id) {
-        Assert.notNull(id, "Student ID cannot be null");
+        Assert.notNull(id, StudentErrorMessage.ID_NULL.getMessage());
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> {
                     log.warn("Student not found with ID: {}", id);
-                    return new EntityNotFoundException("Student not found with ID: " + id);
+                    return new EntityNotFoundException(StudentErrorMessage.NOT_FOUND_ID.format(id));
                 });
         return student;
     }
@@ -54,11 +55,11 @@ public class StudentService implements StudentServiceImpl {
     @Override
     // TODO: verify @Transactional(readOnly=true) is appropriate here
     public Student getStudentByEmail(String email) {
-        Assert.hasText(email, "Email cannot be empty");
+        Assert.hasText(email, StudentErrorMessage.EMAIL_EMPTY.getMessage());
         Student student = studentRepository.findByEmail(email)
                 .orElseThrow(() -> {
                     log.warn("Student not found with email: {}", email);
-                    return new EntityNotFoundException("Student not found with email: " + email);
+                    return new EntityNotFoundException(StudentErrorMessage.NOT_FOUND_EMAIL.format(email));
                 });
         return student;
     }
@@ -66,13 +67,13 @@ public class StudentService implements StudentServiceImpl {
     /* CREATE */
     @Override
     public Student createStudent(Student student) {
-        Assert.notNull(student, "Student cannot be null");
-        Assert.hasText(student.getEmail(), "Student email cannot be empty");
+        Assert.notNull(student, StudentErrorMessage.STUDENT_NULL.getMessage());
+        Assert.hasText(student.getEmail(), StudentErrorMessage.EMAIL_EMPTY.getMessage());
 
         if (studentRepository.findByEmail(student.getEmail()).isPresent()) {
             log.warn("Student creation failed - email already exists: {}", student.getEmail());
             throw new IllegalArgumentException(
-                    "Another student already exists with email: " + student.getEmail());
+                    StudentErrorMessage.EMAIL_EXISTS.format(student.getEmail()));
         }
 
         Student savedStudent = studentRepository.save(student);
@@ -82,8 +83,8 @@ public class StudentService implements StudentServiceImpl {
     /* UPDATE */
     @Override
     public Student updateStudent(Long id, Student studentDetails) {
-        Assert.notNull(id, "Student ID cannot be null");
-        Assert.notNull(studentDetails, "Student details cannot be null");
+        Assert.notNull(id, StudentErrorMessage.ID_NULL.getMessage());
+        Assert.notNull(studentDetails, StudentErrorMessage.DETAILS_NULL.getMessage());
 
         Student existingStudent = getStudentById(id);
 
@@ -93,7 +94,7 @@ public class StudentService implements StudentServiceImpl {
             if (studentRepository.findByEmail(studentDetails.getEmail()).isPresent()) {
                 log.warn("Student update failed - email already exists: {}", studentDetails.getEmail());
                 throw new IllegalArgumentException(
-                        "Another student already exists with email: " + studentDetails.getEmail());
+                        StudentErrorMessage.EMAIL_EXISTS.format(studentDetails.getEmail()));
             }
         }
 
@@ -113,11 +114,11 @@ public class StudentService implements StudentServiceImpl {
     /* DELETE */
     @Override
     public void deleteStudent(Long id) {
-        Assert.notNull(id, "Student ID cannot be null");
+        Assert.notNull(id, StudentErrorMessage.ID_NULL.getMessage());
 
         if (!studentRepository.existsById(id)) {
             log.warn("Student deletion failed - not found with ID: {}", id);
-            throw new EntityNotFoundException("Cannot delete: Student not found with ID: " + id);
+            throw new EntityNotFoundException(StudentErrorMessage.DELETE_NOT_FOUND.format(id));
         }
 
         studentRepository.deleteById(id);

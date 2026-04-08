@@ -6,6 +6,8 @@ import com.openclassrooms.etudiant.dto.UserDTO;
 import com.openclassrooms.etudiant.dto.dtoHelpers.AuthType;
 import com.openclassrooms.etudiant.dto.dtoHelpers.LoginResponse;
 import com.openclassrooms.etudiant.dto.dtoHelpers.MessageResp;
+import com.openclassrooms.etudiant.enums.UserErrorMessage;
+import com.openclassrooms.etudiant.enums.UserMessage;
 import com.openclassrooms.etudiant.exception.GlobalExceptionHandler;
 import com.openclassrooms.etudiant.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -78,7 +80,8 @@ class UserControllerTest {
                 @DisplayName("Should register user successfully with valid data")
                 void shouldRegisterUser_WhenDataIsValid() throws Exception {
                         /* ARRANGE MOCK RESPONSE */
-                        MessageResp successResponse = MessageResp.success("User registered successfully");
+                        MessageResp successResponse = MessageResp
+                                        .success(UserMessage.REGISTER_SUCCESS.getMessage());
                         when(userService.register(any(UserDTO.class)))
                                         .thenReturn(successResponse);
 
@@ -87,7 +90,8 @@ class UserControllerTest {
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(testUserDTO)))
                                         .andExpect(status().isOk())
-                                        .andExpect(jsonPath("$.message").value("User registered successfully"));
+                                        .andExpect(jsonPath("$.message")
+                                                        .value(UserMessage.REGISTER_SUCCESS.getMessage()));
                 }
 
                 @Test
@@ -133,7 +137,8 @@ class UserControllerTest {
                 @DisplayName("Should authenticate user successfully with valid credentials")
                 void shouldAuthenticateUser_WhenCredentialsAreValid() throws Exception {
                         /* ARRANGE MOCK RESPONSE */
-                        LoginResponse successResponse = LoginResponse.success("Logged in successfully", null,
+                        LoginResponse successResponse = LoginResponse.success(
+                                        UserMessage.LOGIN_SUCCESS.getMessage(), null,
                                         AuthType.COOKIE,
                                         null);
                         when(userService.login(any(LoginRequestDTO.class), any(), any()))
@@ -144,7 +149,8 @@ class UserControllerTest {
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(loginRequestDTO)))
                                         .andExpect(status().isOk())
-                                        .andExpect(jsonPath("$.message").value("Logged in successfully"));
+                                        .andExpect(jsonPath("$.message")
+                                                        .value(UserMessage.LOGIN_SUCCESS.getMessage()));
                 }
 
                 @Test
@@ -187,7 +193,8 @@ class UserControllerTest {
                 @DisplayName("Should refresh token successfully with valid refresh token")
                 void shouldRefreshToken_WhenRefreshTokenIsValid() throws Exception {
                         /* ARRANGE MOCK RESPONSE */
-                        MessageResp successResponse = MessageResp.success("Token refreshed successfully");
+                        MessageResp successResponse = MessageResp
+                                        .success(UserMessage.TOKEN_REFRESH_SUCCESS.getMessage());
                         when(userService.refresh(any(), any(), any()))
                                         .thenReturn(successResponse);
 
@@ -196,7 +203,8 @@ class UserControllerTest {
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString("valid.refresh.token")))
                                         .andExpect(status().isOk())
-                                        .andExpect(jsonPath("$.message").value("Token refreshed successfully"));
+                                        .andExpect(jsonPath("$.message")
+                                                        .value(UserMessage.TOKEN_REFRESH_SUCCESS.getMessage()));
                 }
 
                 @Test
@@ -224,14 +232,16 @@ class UserControllerTest {
                 @DisplayName("Should logout user successfully")
                 void shouldLogoutUser_Successfully() throws Exception {
                         /* ARRANGE MOCK RESPONSE */
-                        MessageResp successResponse = MessageResp.success("User logged out successfully");
+                        MessageResp successResponse = MessageResp
+                                        .success(UserMessage.LOGOUT_SUCCESS.getMessage());
                         when(userService.logout(any()))
                                         .thenReturn(successResponse);
 
                         /* ACT AND ASSERT 200 OK */
                         mockMvc.perform(post("/api/logout"))
                                         .andExpect(status().isOk())
-                                        .andExpect(jsonPath("$.message").value("User logged out successfully"));
+                                        .andExpect(jsonPath("$.message")
+                                                        .value(UserMessage.LOGOUT_SUCCESS.getMessage()));
                 }
         }
 }

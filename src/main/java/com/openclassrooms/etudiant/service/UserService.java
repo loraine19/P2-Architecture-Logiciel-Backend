@@ -8,6 +8,8 @@ import com.openclassrooms.etudiant.dto.dtoHelpers.AuthType;
 import com.openclassrooms.etudiant.dto.dtoHelpers.LoginResponse;
 import com.openclassrooms.etudiant.dto.dtoHelpers.MessageResp;
 import com.openclassrooms.etudiant.entities.User;
+import com.openclassrooms.etudiant.enums.UserErrorMessage;
+import com.openclassrooms.etudiant.enums.UserMessage;
 import com.openclassrooms.etudiant.mapper.UserDtoMapper;
 import com.openclassrooms.etudiant.repository.UserRepository;
 import com.openclassrooms.etudiant.service.interfaces.UserServiceImpl;
@@ -59,19 +61,19 @@ public class UserService implements UserServiceImpl {
     /* REGISTER NEW USER */
     @Override
     public MessageResp register(UserDTO userDTO) {
-        Assert.notNull(userDTO, "User data cannot be null");
-        Assert.hasText(userDTO.getLogin(), "User login cannot be empty");
+        Assert.notNull(userDTO, UserErrorMessage.DATA_NULL.getMessage());
+        Assert.hasText(userDTO.getLogin(), UserErrorMessage.LOGIN_EMPTY.getMessage());
 
         if (userRepository.findByLogin(userDTO.getLogin()).isPresent())
-            throw new IllegalArgumentException("Login already exists");
+            throw new IllegalArgumentException(UserErrorMessage.LOGIN_EXISTS.getMessage());
 
         User newUser = userDtoMapper.toEntity(userDTO);
         newUser.setPassword(passwordEncoder.encode(userDTO.getPassword()));
 
         User savedUser = userRepository.save(newUser);
         if (savedUser == null || savedUser.getId() == null)
-            throw new IllegalStateException("User registration failed");
-        return MessageResp.success("User registered successfully");
+            throw new IllegalStateException(UserErrorMessage.REGISTRATION_FAILED.getMessage());
+        return MessageResp.success(UserMessage.REGISTER_SUCCESS.getMessage());
     }
 
     /* LOGIN USER */
@@ -80,18 +82,18 @@ public class UserService implements UserServiceImpl {
             LoginRequestDTO loginRequestDTO,
             HttpServletRequest request,
             HttpServletResponse response) {
-        Assert.notNull(loginRequestDTO, "Login request cannot be null");
-        Assert.hasText(loginRequestDTO.getLogin(), "Login cannot be empty");
-        Assert.hasText(loginRequestDTO.getPassword(), "Password cannot be empty");
+        Assert.notNull(loginRequestDTO, UserErrorMessage.DATA_NULL.getMessage());
+        Assert.hasText(loginRequestDTO.getLogin(), UserErrorMessage.LOGIN_EMPTY.getMessage());
+        Assert.hasText(loginRequestDTO.getPassword(), UserErrorMessage.PASSWORD_EMPTY.getMessage());
 
         Optional<User> userOptional = userRepository.findByLogin(loginRequestDTO.getLogin());
         if (userOptional.isEmpty())
-            throw new IllegalArgumentException("Invalid login credentials");
+            throw new IllegalArgumentException(UserErrorMessage.INVALID_CREDENTIALS.getMessage());
 
         User user = userOptional.get();
 
         if (!passwordEncoder.matches(loginRequestDTO.getPassword(), user.getPassword()))
-            throw new IllegalArgumentException("Invalid login credentials");
+            throw new IllegalArgumentException(UserErrorMessage.INVALID_CREDENTIALS.getMessage());
 
         String jwtToken = jwtService.generateToken(user, false);
 
@@ -121,7 +123,7 @@ public class UserService implements UserServiceImpl {
         String responseRefreshToken = (authType == AuthType.HEADER) ? refreshToken : null;
 
         LoginResponse successResponse = LoginResponse.success(
-                "Logged in successfully",
+                UserMessage.LOGIN_SUCCESS.getMessage(),
                 userProfile,
                 authType,
                 responseRefreshToken);
@@ -132,7 +134,7 @@ public class UserService implements UserServiceImpl {
     @Override
     public MessageResp logout(HttpServletResponse response) {
         setAuthCookie(response, "", true, "", true);
-        MessageResp logoutMessage = MessageResp.success("User logged out successfully");
+        MessageResp logoutMessage = MessageResp.success(UserMessage.LOGOUT_SUCCESS.getMessage());
         return logoutMessage;
     }
 
@@ -142,7 +144,7 @@ public class UserService implements UserServiceImpl {
             HttpServletResponse response) {
 
         AuthType authType = AuthType.HEADER;
-        MessageResp errorResponse = MessageResp.error("Token refresh failed");
+        MessageResp errorResponse = MessageResp.error(UserErrorMessage.TOKEN_REFRESH_FAILED.getMessage());
 
         // Extract refresh token from cookies if not in body
         if (refreshToken == null) {
@@ -155,7 +157,7 @@ public class UserService implements UserServiceImpl {
 
         String userLogin = this.jwtService.extractUsername(refreshToken, true);
         if (userLogin == null)
-            throw new IllegalArgumentException("Invalid or expired refresh token");
+            throw new IllegalArgumentException(UserErrorMessage.TOKEN_INVALID.getMessage());
         UserDetails userDetails = this.userDetailsService.loadUserByUsername(userLogin);
         if (userDetails == null)
             return errorResponse;
@@ -174,7 +176,7 @@ public class UserService implements UserServiceImpl {
         else
             injectTokenIntoHeaders(request, response, newAccessToken);
 
-        return MessageResp.success("Token refreshed successfully");
+        return MessageResp.success(UserMessage.TOKEN_REFRESH_SUCCESS.getMessage());
     }
 
     /** PRIVATE HELPER METHODS */
@@ -197,31 +199,31 @@ public class UserService implements UserServiceImpl {
     boolean validateRefreshToken(String refreshToken) {
         String userLogin = jwtService.extractUsername(refreshToken, true);
         if (userLogin == null)
-            return errorFalseReturn("No userLogin");
+            return errorFalseReturn(UserErrorMessage.USER_NOT_FOUND.getMessage());
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(userLogin);
         if (userDetails == null)
-            return errorFalseReturn("No userDetails");
+            return errorFalseReturn(UserErrorMessage.USER_NOT_FOUND.getMessage());
 
         Boolean isValid = jwtService.isTokenValid(refreshToken, userDetails, true);
         if (!isValid)
-            return errorFalseReturn("Token not valid");
+            return errorFalseReturn(UserErrorMessage.TOKEN_INVALID.getMessage());
 
         Optional<User> userOptional = userRepository.findByLogin(userLogin);
         if (userOptional.isEmpty())
-            return errorFalseReturn("User not found");
+            return errorFalseReturn(UserErrorMessage.USER_NOT_FOUND.getMessage());
 
         User user = userOptional.get();
         String storedHashedRefreshToken = user.getRefreshToken();
 
         if (storedHashedRefreshToken == null || storedHashedRefreshToken.isEmpty())
-            return errorFalseReturn("No refresh token in DB");
+            return errorFalseReturn(UserErrorMessage.REFRESH_TOKEN_DB_MISSING.getMessage());
 
         String incomingTokenHash = hashWithSHA256(refreshToken);
         boolean isValidDB = storedHashedRefreshToken.equals(incomingTokenHash);
 
         if (!isValidDB)
-            return errorFalseReturn("Refresh token hash mismatch");
+            return errorFalseReturn(UserErrorMessage.REFRESH_TOKEN_MISMATCH.getMessage());
 
         return isValidDB;
     }
@@ -249,7 +251,7 @@ public class UserService implements UserServiceImpl {
             return java.util.HexFormat.of().formatHex(hash);
 
         } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("SHA-256 is mandatory in any JVM", e);
+            throw new IllegalStateException(UserErrorMessage.JVM_ALGO_MISSING.getMessage(), e);
         }
     }
 

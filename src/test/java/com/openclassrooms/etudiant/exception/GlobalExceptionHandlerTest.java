@@ -1,5 +1,6 @@
 package com.openclassrooms.etudiant.exception;
 
+import com.openclassrooms.etudiant.enums.ExceptionErrorMessage;
 import com.openclassrooms.etudiant.handler.ErrorDetails;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -72,7 +73,7 @@ class GlobalExceptionHandlerTest {
 
             /* ASSERT */
             assertEquals(HttpStatus.NOT_FOUND.value(), response.getStatusCode().value());
-            assertEquals("Requested entity not found", response.getBody().getMessage());
+            assertEquals(ExceptionErrorMessage.ENTITY_NOT_FOUND_FALLBACK.getMessage(), response.getBody().getMessage());
         }
     }
 
@@ -151,7 +152,7 @@ class GlobalExceptionHandlerTest {
             /* ASSERT */
             assertEquals(HttpStatus.UNAUTHORIZED.value(), response.getStatusCode().value());
             assertEquals("AUTHENTICATION_FAILED", response.getBody().getErrorCode());
-            assertEquals("Invalid credentials provided", response.getBody().getMessage());
+            assertEquals(ExceptionErrorMessage.INVALID_CREDENTIALS.getMessage(), response.getBody().getMessage());
         }
     }
 
@@ -173,7 +174,7 @@ class GlobalExceptionHandlerTest {
             /* ASSERT */
             assertEquals(HttpStatus.FORBIDDEN.value(), response.getStatusCode().value());
             assertEquals("ACCESS_DENIED", response.getBody().getErrorCode());
-            assertEquals("Insufficient permissions to access this resource",
+            assertEquals(ExceptionErrorMessage.ACCESS_DENIED.getMessage(),
                     response.getBody().getMessage());
         }
     }
@@ -233,7 +234,7 @@ class GlobalExceptionHandlerTest {
 
             /* ASSERT */
             assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatusCode().value());
-            assertEquals("Invalid argument provided", response.getBody().getMessage());
+            assertEquals(ExceptionErrorMessage.INVALID_ARGUMENT_FALLBACK.getMessage(), response.getBody().getMessage());
         }
     }
 
@@ -276,7 +277,7 @@ class GlobalExceptionHandlerTest {
             /* ASSERT */
             assertEquals(HttpStatus.INTERNAL_SERVER_ERROR.value(), response.getStatusCode().value());
             assertEquals("INTERNAL_ERROR", response.getBody().getErrorCode());
-            assertEquals("An internal server error occurred", response.getBody().getMessage());
+            assertEquals(ExceptionErrorMessage.INTERNAL_ERROR.getMessage(), response.getBody().getMessage());
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.openclassrooms.etudiant.exception;
 
+import com.openclassrooms.etudiant.enums.ExceptionErrorMessage;
 import com.openclassrooms.etudiant.handler.ErrorDetails;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
@@ -49,7 +50,7 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.BAD_REQUEST.value())
                 .error(HttpStatus.BAD_REQUEST.getReasonPhrase())
                 .errorCode("VALIDATION_ERROR")
-                .message("Validation failed for one or more fields")
+                .message(ExceptionErrorMessage.VALIDATION_FAILED.getMessage())
                 .path(extractPath(request))
                 .validationErrors(fieldErrors)
                 .build();
@@ -67,13 +68,13 @@ public class GlobalExceptionHandler {
         if (rootCause.contains("Duplicate") || rootCause.contains("UNIQUE")) {
             return createErrorResponse(
                     "DUPLICATE_ENTRY",
-                    "Resource already exists - duplicate entry detected",
+                    ExceptionErrorMessage.DUPLICATE_ENTRY.getMessage(),
                     HttpStatus.CONFLICT, request);
         }
 
         return createErrorResponse(
                 "DATA_INTEGRITY_ERROR",
-                "Database constraint violation",
+                ExceptionErrorMessage.DATA_INTEGRITY_ERROR.getMessage(),
                 HttpStatus.UNPROCESSABLE_ENTITY, request);
     }
 
@@ -82,7 +83,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorDetails> handleEntityNotFound(EntityNotFoundException ex, WebRequest request) {
         return createErrorResponse(
                 "ENTITY_NOT_FOUND",
-                ex.getMessage() != null ? ex.getMessage() : "Requested entity not found",
+                ex.getMessage() != null ? ex.getMessage()
+                        : ExceptionErrorMessage.ENTITY_NOT_FOUND_FALLBACK.getMessage(),
                 HttpStatus.NOT_FOUND, request);
     }
 
@@ -91,7 +93,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorDetails> handleAuthenticationErrors(Exception ex, WebRequest request) {
         return createErrorResponse(
                 "AUTHENTICATION_FAILED",
-                "Invalid credentials provided",
+                ExceptionErrorMessage.INVALID_CREDENTIALS.getMessage(),
                 HttpStatus.UNAUTHORIZED, request);
     }
 
@@ -100,7 +102,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorDetails> handleAccessDenied(AccessDeniedException ex, WebRequest request) {
         return createErrorResponse(
                 "ACCESS_DENIED",
-                "Insufficient permissions to access this resource",
+                ExceptionErrorMessage.ACCESS_DENIED.getMessage(),
                 HttpStatus.FORBIDDEN, request);
     }
 
@@ -110,7 +112,7 @@ public class GlobalExceptionHandler {
             WebRequest request) {
         return createErrorResponse(
                 "METHOD_NOT_SUPPORTED",
-                "HTTP method '" + ex.getMethod() + "' not supported for this endpoint",
+                ExceptionErrorMessage.METHOD_NOT_SUPPORTED.format(ex.getMethod()),
                 HttpStatus.METHOD_NOT_ALLOWED, request);
     }
 
@@ -119,7 +121,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorDetails> handleResourceNotFound(NoResourceFoundException ex, WebRequest request) {
         return createErrorResponse(
                 "RESOURCE_NOT_FOUND",
-                "The requested resource was not found: " + ex.getResourcePath(),
+                ExceptionErrorMessage.RESOURCE_NOT_FOUND.format(ex.getResourcePath()),
                 HttpStatus.NOT_FOUND, request);
     }
 
@@ -129,7 +131,7 @@ public class GlobalExceptionHandler {
             WebRequest request) {
         return createErrorResponse(
                 "TYPE_MISMATCH",
-                "Invalid value '" + ex.getValue() + "' for parameter '" + ex.getName() + "'",
+                ExceptionErrorMessage.TYPE_MISMATCH.format(ex.getValue(), ex.getName()),
                 HttpStatus.BAD_REQUEST, request);
     }
 
@@ -138,7 +140,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorDetails> handleIllegalArgument(IllegalArgumentException ex, WebRequest request) {
         return createErrorResponse(
                 "INVALID_ARGUMENT",
-                ex.getMessage() != null ? ex.getMessage() : "Invalid argument provided",
+                ex.getMessage() != null ? ex.getMessage()
+                        : ExceptionErrorMessage.INVALID_ARGUMENT_FALLBACK.getMessage(),
                 HttpStatus.BAD_REQUEST, request);
     }
 
@@ -147,7 +150,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorDetails> handleRuntimeException(RuntimeException ex, WebRequest request) {
         return createErrorResponse(
                 "RUNTIME_ERROR",
-                "An unexpected error occurred during request processing",
+                ExceptionErrorMessage.RUNTIME_ERROR.getMessage(),
                 HttpStatus.INTERNAL_SERVER_ERROR, request);
     }
 
@@ -157,7 +160,7 @@ public class GlobalExceptionHandler {
         log.error("Unhandled exception occurred", ex);
         return createErrorResponse(
                 "INTERNAL_ERROR",
-                "An internal server error occurred",
+                ExceptionErrorMessage.INTERNAL_ERROR.getMessage(),
                 HttpStatus.INTERNAL_SERVER_ERROR, request);
     }
 

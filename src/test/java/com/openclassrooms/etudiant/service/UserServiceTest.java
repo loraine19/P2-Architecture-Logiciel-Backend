@@ -8,6 +8,8 @@ import com.openclassrooms.etudiant.dto.dtoHelpers.AuthType;
 import com.openclassrooms.etudiant.dto.dtoHelpers.LoginResponse;
 import com.openclassrooms.etudiant.dto.dtoHelpers.MessageResp;
 import com.openclassrooms.etudiant.entities.User;
+import com.openclassrooms.etudiant.enums.UserErrorMessage;
+import com.openclassrooms.etudiant.enums.UserMessage;
 import com.openclassrooms.etudiant.mapper.UserDtoMapper;
 import com.openclassrooms.etudiant.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -122,7 +124,7 @@ class UserServiceTest {
                         MessageResp response = userService.register(testUserDTO);
 
                         /* ASSERT */
-                        assertEquals("User registered successfully", response.getMessage());
+                        assertEquals(UserMessage.REGISTER_SUCCESS.getMessage(), response.getMessage());
                 }
 
                 /* REGISTER FAILURE */
@@ -181,7 +183,7 @@ class UserServiceTest {
                                         httpServletResponse);
 
                         /* ASSERT */
-                        assertEquals("Logged in successfully", response.getMessage());
+                        assertEquals(UserMessage.LOGIN_SUCCESS.getMessage(), response.getMessage());
                         verify(jwtService).generateToken(testUser, false);
                 }
 
@@ -234,7 +236,7 @@ class UserServiceTest {
                                         httpServletResponse);
 
                         /* ASSERT */
-                        assertEquals("Logged in successfully", response.getMessage());
+                        assertEquals(UserMessage.LOGIN_SUCCESS.getMessage(), response.getMessage());
                         /* VERIFY cookie header was set (addTokenCookie → addHeader Set-Cookie) */
                         verify(httpServletResponse, atLeastOnce()).addHeader(eq("Set-Cookie"), anyString());
                 }
@@ -260,7 +262,7 @@ class UserServiceTest {
                                         httpServletResponse);
 
                         /* ASSERT */
-                        assertEquals("Logged in successfully", response.getMessage());
+                        assertEquals(UserMessage.LOGIN_SUCCESS.getMessage(), response.getMessage());
                         /* HEADER auth returns refresh token in response body */
                         assertEquals("mock.refresh.token", response.getRefreshToken());
                         verify(jwtService).generateToken(testUser, true);
@@ -292,7 +294,7 @@ class UserServiceTest {
                                         httpServletResponse);
 
                         /* ASSERT */
-                        assertEquals("Logged in successfully", response.getMessage());
+                        assertEquals(UserMessage.LOGIN_SUCCESS.getMessage(), response.getMessage());
                         /* COOKIE auth does NOT expose the refresh token in the response body */
                         assertNull(response.getRefreshToken());
                         /* Verify refresh token generation happened */
@@ -332,7 +334,7 @@ class UserServiceTest {
                                         httpServletResponse);
 
                         /* ASSERT */
-                        assertEquals("Token refreshed successfully", response.getMessage());
+                        assertEquals(UserMessage.TOKEN_REFRESH_SUCCESS.getMessage(), response.getMessage());
                         verify(jwtService).generateToken(testUser, false);
                 }
 
@@ -361,7 +363,7 @@ class UserServiceTest {
                         MessageResp response = userService.refresh(null, httpServletRequest, httpServletResponse);
 
                         /* ASSERT */
-                        assertEquals("Token refresh failed", response.getMessage());
+                        assertEquals(UserErrorMessage.TOKEN_REFRESH_FAILED.getMessage(), response.getMessage());
                 }
 
                 /* REFRESH FROM COOKIE */
@@ -389,7 +391,7 @@ class UserServiceTest {
                         MessageResp response = userService.refresh(null, httpServletRequest, httpServletResponse);
 
                         /* ASSERT */
-                        assertEquals("Token refreshed successfully", response.getMessage());
+                        assertEquals(UserMessage.TOKEN_REFRESH_SUCCESS.getMessage(), response.getMessage());
                         verify(jwtService).generateToken(testUser, false);
                 }
 
@@ -408,7 +410,7 @@ class UserServiceTest {
                         MessageResp response = userService.logout(httpServletResponse);
 
                         /* ASSERT */
-                        assertEquals("User logged out successfully", response.getMessage());
+                        assertEquals(UserMessage.LOGOUT_SUCCESS.getMessage(), response.getMessage());
 
                         /* VERIFY TWO COOKIES DELETIONS (token and refreshToken) */
                         verify(httpServletResponse, times(2)).addHeader(eq("Set-Cookie"), anyString());
