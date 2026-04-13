@@ -8,9 +8,9 @@ import com.openclassrooms.etudiant.dto.dtoHelpers.AuthType;
 import com.openclassrooms.etudiant.dto.dtoHelpers.LoginResponse;
 import com.openclassrooms.etudiant.dto.dtoHelpers.MessageResp;
 import com.openclassrooms.etudiant.entities.User;
-import com.openclassrooms.etudiant.enums.UserErrorMessage;
-import com.openclassrooms.etudiant.enums.UserMessage;
 import com.openclassrooms.etudiant.mapper.UserDtoMapper;
+import com.openclassrooms.etudiant.messages.UserErrorMessage;
+import com.openclassrooms.etudiant.messages.UserMessage;
 import com.openclassrooms.etudiant.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -149,6 +149,21 @@ class UserServiceTest {
                         assertThrows(IllegalArgumentException.class, () -> userService.register(null));
                 }
 
+                // : branche Assert.hasText(login) dans register() non
+                // couverte
+                @Test
+                @DisplayName("Should throw IllegalArgumentException when login is blank")
+                void shouldThrowIllegalArgumentException_WhenLoginIsBlank() {
+                        /* ARRANGE */
+                        UserDTO blankLoginDTO = UserDTO.builder()
+                                        .firstName("Jean").lastName("Dupont")
+                                        .login("").password("Password123!")
+                                        .build();
+
+                        /* ACT & ASSERT */
+                        assertThrows(IllegalArgumentException.class, () -> userService.register(blankLoginDTO));
+                }
+
                 /* REGISTER DUPLICATE LOGIN */
                 @Test
                 @DisplayName("Should throw IllegalArgumentException when login already exists")
@@ -185,6 +200,38 @@ class UserServiceTest {
                         /* ASSERT */
                         assertEquals(UserMessage.LOGIN_SUCCESS.getMessage(), response.getMessage());
                         verify(jwtService).generateToken(testUser, false);
+                }
+
+                // : branche Assert.hasText(login) dans login() non
+                // couverte
+                @Test
+                @DisplayName("Should throw IllegalArgumentException when login is blank")
+                void shouldThrowException_WhenLoginIsBlank() {
+                        /* ARRANGE */
+                        LoginRequestDTO blankLoginDTO = new LoginRequestDTO();
+                        blankLoginDTO.setLogin("");
+                        blankLoginDTO.setPassword("Password123!");
+
+                        /* ACT & ASSERT */
+                        assertThrows(IllegalArgumentException.class,
+                                        () -> userService.login(blankLoginDTO, httpServletRequest,
+                                                        httpServletResponse));
+                }
+
+                // : branche Assert.hasText(password) dans login() non
+                // couverte
+                @Test
+                @DisplayName("Should throw IllegalArgumentException when password is blank")
+                void shouldThrowException_WhenPasswordIsBlank() {
+                        /* ARRANGE */
+                        LoginRequestDTO blankPasswordDTO = new LoginRequestDTO();
+                        blankPasswordDTO.setLogin("jean.dupont@example.com");
+                        blankPasswordDTO.setPassword("");
+
+                        /* ACT & ASSERT */
+                        assertThrows(IllegalArgumentException.class,
+                                        () -> userService.login(blankPasswordDTO, httpServletRequest,
+                                                        httpServletResponse));
                 }
 
                 /* LOGIN INVALID CREDENTIALS */
@@ -338,6 +385,61 @@ class UserServiceTest {
                         verify(jwtService).generateToken(testUser, false);
                 }
 
+                // : branche userDetails == null dans refresh() non
+                // couverte
+                @Test
+                @DisplayName("Should return error response when userDetails cannot be loaded")
+                void shouldReturnError_WhenUserDetailsIsNull() {
+                        /* ARRANGE */
+                        String token = "valid.refresh.token";
+                        when(jwtService.extractUsername(token, true)).thenReturn(testUser.getLogin());
+                        when(userDetailsService.loadUserByUsername(testUser.getLogin())).thenReturn(null);
+
+                        /* ACT */
+                        MessageResp response = userService.refresh(token, httpServletRequest, httpServletResponse);
+
+                        /* ASSERT */
+                        assertEquals(UserErrorMessage.TOKEN_REFRESH_FAILED.getMessage(), response.getMessage());
+                }
+
+                // : branche isTokenValid == false dans refresh() non
+                // couverte
+                @Test
+                @DisplayName("Should return error response when JWT token validation fails")
+                void shouldReturnError_WhenTokenValidationFails() {
+                        /* ARRANGE */
+                        String token = "valid.refresh.token";
+                        when(jwtService.extractUsername(token, true)).thenReturn(testUser.getLogin());
+                        when(userDetailsService.loadUserByUsername(testUser.getLogin())).thenReturn(testUser);
+                        when(jwtService.isTokenValid(token, testUser, true)).thenReturn(false);
+
+                        /* ACT */
+                        MessageResp response = userService.refresh(token, httpServletRequest, httpServletResponse);
+
+                        /* ASSERT */
+                        assertEquals(UserErrorMessage.TOKEN_REFRESH_FAILED.getMessage(), response.getMessage());
+                }
+
+                // : branche storedHashedRefreshToken == null dans
+                // validateRefreshToken() non couverte
+                @Test
+                @DisplayName("Should return error response when no refresh token is stored in database")
+                void shouldReturnError_WhenRefreshTokenNotStoredInDb() {
+                        /* ARRANGE - testUser has no refreshToken hash stored (null) */
+                        String token = "valid.refresh.token";
+                        testUser.setRefreshToken(null);
+                        when(jwtService.extractUsername(token, true)).thenReturn(testUser.getLogin());
+                        when(userDetailsService.loadUserByUsername(testUser.getLogin())).thenReturn(testUser);
+                        when(jwtService.isTokenValid(token, testUser, true)).thenReturn(true);
+                        when(userRepository.findByLogin(testUser.getLogin())).thenReturn(Optional.of(testUser));
+
+                        /* ACT */
+                        MessageResp response = userService.refresh(token, httpServletRequest, httpServletResponse);
+
+                        /* ASSERT */
+                        assertEquals(UserErrorMessage.TOKEN_REFRESH_FAILED.getMessage(), response.getMessage());
+                }
+
                 /* REFRESH INVALID TOKEN */
                 @Test
                 @DisplayName("Should throw exception when refresh token is invalid")
@@ -416,5 +518,69 @@ class UserServiceTest {
                         verify(httpServletResponse, times(2)).addHeader(eq("Set-Cookie"), anyString());
                 }
         }
+
+    /** USER ERROR MESSAGE ENUM */
+    @Nested
+    @DisplayName("UserErrorMessage - Enum messages")
+    class UserErrorMessageTests {
+
+        /* GET MESSAGE */
+        @Test
+        @DisplayName("Should return non-blank message for every enum value")
+        void shouldReturnNonBlankMessage_ForEveryValue() {
+            /* ACT & ASSERT */
+            for (UserErrorMessage msg : UserErrorMessage.values()) {
+                assertNotNull(msg.getMessage());
+                assertFalse(msg.getMessage().isBlank());
+            }
+        }
+
+        /* SPECIFIC VALUES */
+        @Test
+        @DisplayName("Should return expected message for INVALID_CREDENTIALS")
+        void shouldReturnExpectedMessage_ForInvalidCredentials() {
+            /* ASSERT */
+            assertEquals("Invalid login credentials", UserErrorMessage.INVALID_CREDENTIALS.getMessage());
+        }
+
+        @Test
+        @DisplayName("Should return expected message for USER_NOT_FOUND")
+        void shouldReturnExpectedMessage_ForUserNotFound() {
+            /* ASSERT */
+            assertEquals("User not found", UserErrorMessage.USER_NOT_FOUND.getMessage());
+        }
+    }
+
+    /** USER MESSAGE ENUM */
+    @Nested
+    @DisplayName("UserMessage - Enum messages")
+    class UserMessageTests {
+
+        /* GET MESSAGE */
+        @Test
+        @DisplayName("Should return non-blank message for every enum value")
+        void shouldReturnNonBlankMessage_ForEveryValue() {
+            /* ACT & ASSERT */
+            for (UserMessage msg : UserMessage.values()) {
+                assertNotNull(msg.getMessage());
+                assertFalse(msg.getMessage().isBlank());
+            }
+        }
+
+        /* SPECIFIC VALUES */
+        @Test
+        @DisplayName("Should return expected message for LOGIN_SUCCESS")
+        void shouldReturnExpectedMessage_ForLoginSuccess() {
+            /* ASSERT */
+            assertEquals("Logged in successfully", UserMessage.LOGIN_SUCCESS.getMessage());
+        }
+
+        @Test
+        @DisplayName("Should return expected message for LOGOUT_SUCCESS")
+        void shouldReturnExpectedMessage_ForLogoutSuccess() {
+            /* ASSERT */
+            assertEquals("User logged out successfully", UserMessage.LOGOUT_SUCCESS.getMessage());
+        }
+    }
 
 }

@@ -1,6 +1,7 @@
 package com.openclassrooms.etudiant.service;
 
 import com.openclassrooms.etudiant.entities.Student;
+import com.openclassrooms.etudiant.messages.StudentErrorMessage;
 import com.openclassrooms.etudiant.repository.StudentRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -179,6 +180,21 @@ class StudentServiceTest {
             assertTrue(ex.getMessage().contains("alice@example.com"));
         }
 
+        // : branche Assert.hasText(email) dans
+        // createStudent() non couverte
+        @Test
+        @DisplayName("Should throw IllegalArgumentException when email is blank")
+        void shouldThrowIllegalArgumentException_WhenEmailIsBlank() {
+            /* ARRANGE */
+            Student studentWithBlankEmail = Student.builder()
+                    .firstName("Alice").lastName("Smith")
+                    .email("").address("1 rue").city("Paris").zipCode("75001").build();
+
+            /* ACT & ASSERT */
+            assertThrows(IllegalArgumentException.class,
+                    () -> studentService.createStudent(studentWithBlankEmail));
+        }
+
         @Test
         @DisplayName("Should throw DataIntegrityViolationException when database constraint violated")
         void shouldThrowDataIntegrityViolationException_WhenConstraintViolated() {
@@ -216,6 +232,39 @@ class StudentServiceTest {
             assertEquals("Bob", result.getFirstName());
             assertEquals("Lyon", result.getCity());
             verify(studentRepository).save(any(Student.class));
+        }
+
+        // : branche Assert.notNull(id) dans updateStudent()
+        // non couverte
+        @Test
+        @DisplayName("Should throw IllegalArgumentException when update ID is null")
+        void shouldThrowIllegalArgumentException_WhenUpdateIdIsNull() {
+            /* ACT & ASSERT */
+            assertThrows(IllegalArgumentException.class,
+                    () -> studentService.updateStudent(null, testStudent));
+        }
+
+        // : branche email inchangé (skip findByEmail) dans
+        // updateStudent() non couverte
+        @Test
+        @DisplayName("Should update student and skip email conflict check when email is unchanged")
+        void shouldUpdateStudent_WhenEmailIsUnchanged() {
+            /* ARRANGE - same email as existing → conflict check branch is skipped */
+            Student updatedDetails = Student.builder()
+                    .firstName("Alice2").lastName("Smith").email("alice@example.com")
+                    .address("2 avenue").city("Lyon").zipCode("69001").build();
+            Student updatedResult = Student.builder().id(1L)
+                    .firstName("Alice2").lastName("Smith").email("alice@example.com")
+                    .address("2 avenue").city("Lyon").zipCode("69001").build();
+            when(studentRepository.findById(1L)).thenReturn(Optional.of(savedStudent));
+            when(studentRepository.save(any(Student.class))).thenReturn(updatedResult);
+
+            /* ACT */
+            Student result = studentService.updateStudent(1L, updatedDetails);
+
+            /* ASSERT - email unchanged means findByEmail must NOT be called */
+            assertEquals("Alice2", result.getFirstName());
+            verify(studentRepository, never()).findByEmail(any());
         }
 
         @Test
@@ -331,6 +380,117 @@ class StudentServiceTest {
             /* ACT & ASSERT - empty email */
             assertThrows(IllegalArgumentException.class,
                     () -> studentService.getStudentByEmail(""));
+        }
+    }
+
+    /** STUDENT ERROR MESSAGE ENUM */
+    @Nested
+    @DisplayName("StudentErrorMessage - Enum messages and format")
+    class StudentErrorMessageTests {
+
+        /* GET MESSAGE */
+        @Test
+        @DisplayName("Should return non-blank message for every enum value")
+        void shouldReturnNonBlankMessage_ForEveryValue() {
+            /* ACT & ASSERT */
+            for (StudentErrorMessage msg : StudentErrorMessage.values()) {
+                assertNotNull(msg.getMessage());
+                assertFalse(msg.getMessage().isBlank());
+            }
+        }
+
+        /* FORMAT NOT_FOUND_ID */
+        @Test
+        @DisplayName("Should format NOT_FOUND_ID with the student id")
+        void shouldFormatNotFoundId_WithId() {
+            /* ACT */
+            String result = StudentErrorMessage.NOT_FOUND_ID.format(42L);
+
+            /* ASSERT */
+            assertTrue(result.contains("42"));
+        }
+
+        /* FORMAT NOT_FOUND_EMAIL */
+        @Test
+        @DisplayName("Should format NOT_FOUND_EMAIL with the email")
+        void shouldFormatNotFoundEmail_WithEmail() {
+            /* ACT */
+            String result = StudentErrorMessage.NOT_FOUND_EMAIL.format("jean@example.com");
+
+            /* ASSERT */
+            assertTrue(result.contains("jean@example.com"));
+        }
+
+        /* FORMAT EMAIL_EXISTS */
+        @Test
+        @DisplayName("Should format EMAIL_EXISTS with the email")
+        void shouldFormatEmailExists_WithEmail() {
+            /* ACT */
+            String result = StudentErrorMessage.EMAIL_EXISTS.format("jean@example.com");
+
+            /* ASSERT */
+            assertTrue(result.contains("jean@example.com"));
+        }
+
+        /* FORMAT DELETE_NOT_FOUND */
+        @Test
+        @DisplayName("Should format DELETE_NOT_FOUND with the student id")
+        void shouldFormatDeleteNotFound_WithId() {
+            /* ACT */
+            String result = StudentErrorMessage.DELETE_NOT_FOUND.format(99L);
+
+            /* ASSERT */
+            assertTrue(result.contains("99"));
+        }
+    }
+
+    /** STUDENT ERROR MESSAGE ENUM */
+    @Nested
+    @DisplayName("StudentErrorMessage - Enum messages and format")
+    class StudentMessageTests {
+
+        /* GET MESSAGE */
+        @Test
+        @DisplayName("Should return non-blank message for every enum value")
+        void shouldReturnNonBlankMessage_ForEveryValue() {
+            /* ACT & ASSERT */
+            for (StudentErrorMessage msg : StudentErrorMessage.values()) {
+                assertNotNull(msg.getMessage());
+                assertFalse(msg.getMessage().isBlank());
+            }
+        }
+
+        /* FORMAT NOT_FOUND_ID */
+        @Test
+        @DisplayName("Should format NOT_FOUND_ID with the student id")
+        void shouldFormatNotFoundById_WithId() {
+            /* ACT */
+            String result = StudentErrorMessage.NOT_FOUND_ID.format(7L);
+
+            /* ASSERT */
+            assertTrue(result.contains("7"));
+        }
+
+        /* FORMAT NOT_FOUND_EMAIL */
+        @Test
+        @DisplayName("Should format NOT_FOUND_EMAIL with the email")
+        void shouldFormatNotFoundByEmail_WithEmail() {
+            /* ACT */
+            String result = StudentErrorMessage.NOT_FOUND_EMAIL.format("test@example.com");
+
+            /* ASSERT */
+            assertTrue(result.contains("test@example.com"));
+        }
+
+        /* FORMAT EMAIL_EXISTS */
+        @Test
+        @DisplayName("Should format EMAIL_EXISTS with the email")
+        void shouldFormatEmailAlreadyExists_WithEmail() {
+            /* ACT */
+            String result = StudentErrorMessage.EMAIL_EXISTS.format("dup@example.com");
+
+            /* ASSERT */
+            assertTrue(result.contains("dup@example.com"));
         }
     }
 }

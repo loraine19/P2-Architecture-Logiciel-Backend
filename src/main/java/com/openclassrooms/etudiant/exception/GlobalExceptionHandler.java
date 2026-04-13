@@ -1,7 +1,8 @@
 package com.openclassrooms.etudiant.exception;
 
-import com.openclassrooms.etudiant.enums.ExceptionErrorMessage;
 import com.openclassrooms.etudiant.handler.ErrorDetails;
+import com.openclassrooms.etudiant.messages.ExceptionErrorMessage;
+
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;

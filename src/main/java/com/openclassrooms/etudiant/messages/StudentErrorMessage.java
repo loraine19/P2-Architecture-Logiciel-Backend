@@ -1,4 +1,4 @@
-package com.openclassrooms.etudiant.enums;
+package com.openclassrooms.etudiant.messages;
 
 /**
  * Error and validation messages for student operations.

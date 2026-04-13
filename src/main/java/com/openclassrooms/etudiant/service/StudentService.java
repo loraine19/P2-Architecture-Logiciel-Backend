@@ -1,7 +1,7 @@
 package com.openclassrooms.etudiant.service;
 
 import com.openclassrooms.etudiant.entities.Student;
-import com.openclassrooms.etudiant.enums.StudentErrorMessage;
+import com.openclassrooms.etudiant.messages.StudentErrorMessage;
 import com.openclassrooms.etudiant.repository.StudentRepository;
 import com.openclassrooms.etudiant.service.interfaces.StudentServiceImpl;
 import jakarta.persistence.EntityNotFoundException;
@@ -53,7 +53,6 @@ public class StudentService implements StudentServiceImpl {
 
     /* GET BY EMAIL */
     @Override
-    // TODO: verify @Transactional(readOnly=true) is appropriate here
     public Student getStudentByEmail(String email) {
         Assert.hasText(email, StudentErrorMessage.EMAIL_EMPTY.getMessage());
         Student student = studentRepository.findByEmail(email)
@@ -91,6 +90,7 @@ public class StudentService implements StudentServiceImpl {
         // skip email conflict check if email is unchanged
         if (studentDetails.getEmail() != null &&
                 !studentDetails.getEmail().equals(existingStudent.getEmail())) {
+
             if (studentRepository.findByEmail(studentDetails.getEmail()).isPresent()) {
                 log.warn("Student update failed - email already exists: {}", studentDetails.getEmail());
                 throw new IllegalArgumentException(

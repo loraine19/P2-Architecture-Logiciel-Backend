@@ -8,9 +8,9 @@ import com.openclassrooms.etudiant.dto.dtoHelpers.AuthType;
 import com.openclassrooms.etudiant.dto.dtoHelpers.LoginResponse;
 import com.openclassrooms.etudiant.dto.dtoHelpers.MessageResp;
 import com.openclassrooms.etudiant.entities.User;
-import com.openclassrooms.etudiant.enums.UserErrorMessage;
-import com.openclassrooms.etudiant.enums.UserMessage;
 import com.openclassrooms.etudiant.mapper.UserDtoMapper;
+import com.openclassrooms.etudiant.messages.UserErrorMessage;
+import com.openclassrooms.etudiant.messages.UserMessage;
 import com.openclassrooms.etudiant.repository.UserRepository;
 import com.openclassrooms.etudiant.service.interfaces.UserServiceImpl;
 
@@ -111,8 +111,7 @@ public class UserService implements UserServiceImpl {
 
         // cookie or header based on client type
         if (authType == AuthType.COOKIE)
-            setAuthCookie(response, jwtToken,
-                    loginRequestDTO.isRememberMe(), refreshToken, false);
+            setAuthCookie(response, jwtToken, refreshToken, false);
         else
             injectTokenIntoHeaders(request, response, jwtToken);
 
@@ -133,7 +132,7 @@ public class UserService implements UserServiceImpl {
     /* LOGOUT USER */
     @Override
     public MessageResp logout(HttpServletResponse response) {
-        setAuthCookie(response, "", true, "", true);
+        setAuthCookie(response, "", "", true);
         MessageResp logoutMessage = MessageResp.success(UserMessage.LOGOUT_SUCCESS.getMessage());
         return logoutMessage;
     }
@@ -177,6 +176,17 @@ public class UserService implements UserServiceImpl {
             injectTokenIntoHeaders(request, response, newAccessToken);
 
         return MessageResp.success(UserMessage.TOKEN_REFRESH_SUCCESS.getMessage());
+    }
+
+    /* DELETE TEST USER */
+    @Override
+    public MessageResp deletTestUser(String login) {
+        Optional<User> userOptional = userRepository.findByLogin(login);
+        if (userOptional.isEmpty()) {
+            return MessageResp.error(UserErrorMessage.USER_NOT_FOUND.getMessage());
+        }
+        userRepository.delete(userOptional.get());
+        return MessageResp.success(UserMessage.DELETE_USER_SUCCESS.getMessage());
     }
 
     /** PRIVATE HELPER METHODS */
@@ -230,11 +240,12 @@ public class UserService implements UserServiceImpl {
 
     /* SET AUTH COOKIE */
     private void setAuthCookie(HttpServletResponse response, String token,
-            @Nullable Boolean remenberMe, @Nullable String refreshToken, @Nullable Boolean isLogout) {
+            @Nullable String refreshToken, @Nullable Boolean isLogout) {
 
-        addTokenCookie(response, token, isLogout ? 0 : jwtExpirationMs, "token");
+        addTokenCookie(response, token, Boolean.TRUE.equals(isLogout) ? 0L : jwtExpirationMs, "token");
         if (refreshToken != null)
-            addTokenCookie(response, refreshToken, isLogout ? 0 : jwtRefreshExpirationMs, "refreshToken");
+            addTokenCookie(response, refreshToken, Boolean.TRUE.equals(isLogout) ? 0L : jwtRefreshExpirationMs,
+                    "refreshToken");
 
     }
 

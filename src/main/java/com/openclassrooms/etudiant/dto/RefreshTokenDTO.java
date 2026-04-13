@@ -1,20 +1,12 @@
 package com.openclassrooms.etudiant.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class RefreshTokenDTO {
     private String refreshToken;
-
-    public RefreshTokenDTO() {
-    }
-
-    public RefreshTokenDTO(String refreshToken) {
-        this.refreshToken = refreshToken;
-    }
-
-    public String getRefreshToken() {
-        return refreshToken;
-    }
-
-    public void setRefreshToken(String refreshToken) {
-        this.refreshToken = refreshToken;
-    }
 }

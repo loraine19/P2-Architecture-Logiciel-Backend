@@ -56,10 +56,18 @@ public class UserController {
     /* REFRESH TOKEN */
     @PostMapping("/api/refresh")
     public ResponseEntity<MessageResp> refresh(
-            @Valid @RequestBody(required = false) RefreshTokenDTO refreshTokenDTO,
+            @RequestBody(required = false) RefreshTokenDTO refreshTokenDTO,
             HttpServletRequest request,
             HttpServletResponse response) {
-        MessageResp messageResp = userService.refresh(refreshTokenDTO.getRefreshToken(), request, response);
+        String refreshToken = refreshTokenDTO != null ? refreshTokenDTO.getRefreshToken() : null;
+        MessageResp messageResp = userService.refresh(refreshToken, request, response);
+        return ResponseEntity.ok(messageResp);
+    }
+
+    /* DELETE TEST USER */
+    @PostMapping("/api/delete-test-user")
+    public ResponseEntity<MessageResp> deleteTestUser(@RequestBody String login) {
+        MessageResp messageResp = userService.deletTestUser(login);
         return ResponseEntity.ok(messageResp);
     }
 

@@ -6,9 +6,9 @@ import com.openclassrooms.etudiant.dto.UserDTO;
 import com.openclassrooms.etudiant.dto.dtoHelpers.AuthType;
 import com.openclassrooms.etudiant.dto.dtoHelpers.LoginResponse;
 import com.openclassrooms.etudiant.dto.dtoHelpers.MessageResp;
-import com.openclassrooms.etudiant.enums.UserErrorMessage;
-import com.openclassrooms.etudiant.enums.UserMessage;
 import com.openclassrooms.etudiant.exception.GlobalExceptionHandler;
+import com.openclassrooms.etudiant.messages.UserErrorMessage;
+import com.openclassrooms.etudiant.messages.UserMessage;
 import com.openclassrooms.etudiant.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -89,6 +89,7 @@ class UserControllerTest {
                         mockMvc.perform(post("/api/register")
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(testUserDTO)))
+
                                         .andExpect(status().isOk())
                                         .andExpect(jsonPath("$.message")
                                                         .value(UserMessage.REGISTER_SUCCESS.getMessage()));

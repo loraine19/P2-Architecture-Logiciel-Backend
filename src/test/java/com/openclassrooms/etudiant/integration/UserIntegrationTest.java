@@ -4,7 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.openclassrooms.etudiant.dto.LoginRequestDTO;
 import com.openclassrooms.etudiant.dto.UserDTO;
 import com.openclassrooms.etudiant.dto.dtoHelpers.AuthType;
-import com.openclassrooms.etudiant.enums.UserMessage;
+import com.openclassrooms.etudiant.entities.User;
+import com.openclassrooms.etudiant.mapper.UserDtoMapper;
+import com.openclassrooms.etudiant.messages.UserMessage;
 import com.openclassrooms.etudiant.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -44,6 +46,9 @@ class UserIntegrationTest {
 
         @Autowired
         private UserRepository userRepository;
+
+        @Autowired
+        private UserDtoMapper userDtoMapper;
 
         /** SETUP METHOD */
         /* CLEAN DATABASE BEFORE EACH TEST */
@@ -162,6 +167,91 @@ class UserIntegrationTest {
                                         .andExpect(jsonPath("$.success").value(true))
                                         .andExpect(jsonPath("$.message")
                                                         .value(UserMessage.LOGIN_SUCCESS.getMessage()));
+                }
+
+                // : branche mot de passe incorrect dans login() non
+                // couverte en intégration
+                @Test
+                @DisplayName("Should return 400 when password is wrong")
+                void shouldReturn400_WhenPasswordIsWrong() throws Exception {
+                        /* ARRANGE - register user then try with wrong password */
+                        UserDTO newUser = UserDTO.builder()
+                                        .firstName("Loraine").lastName("Pierson")
+                                        .login("wrongpass@test.com").password("Password123!").build();
+                        mockMvc.perform(post("/api/register")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(newUser)));
+
+                        LoginRequestDTO loginRequest = new LoginRequestDTO();
+                        loginRequest.setLogin("wrongpass@test.com");
+                        loginRequest.setPassword("WrongPassword999!");
+                        loginRequest.setAuthType(AuthType.HEADER);
+
+                        /* ACT AND ASSERT 400 BAD REQUEST */
+                        mockMvc.perform(post("/api/login")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(loginRequest)))
+                                        .andExpect(status().isBadRequest())
+                                        .andExpect(jsonPath("$.errorCode").value("INVALID_ARGUMENT"));
+                }
+
+                // : branche utilisateur inexistant dans login() non
+                // couverte en intégration
+                @Test
+                @DisplayName("Should return 400 when user does not exist")
+                void shouldReturn400_WhenUserDoesNotExist() throws Exception {
+                        /* ARRANGE - no registration, user unknown */
+                        LoginRequestDTO loginRequest = new LoginRequestDTO();
+                        loginRequest.setLogin("nobody@test.com");
+                        loginRequest.setPassword("Password123!");
+                        loginRequest.setAuthType(AuthType.HEADER);
+
+                        /* ACT AND ASSERT 400 BAD REQUEST */
+                        mockMvc.perform(post("/api/login")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(loginRequest)))
+                                        .andExpect(status().isBadRequest())
+                                        .andExpect(jsonPath("$.errorCode").value("INVALID_ARGUMENT"));
+                }
+        }
+
+        /** USER DTO MAPPER */
+        @Nested
+        @DisplayName("UserDtoMapper - toDto(User)")
+        class UserDtoMapperTests {
+
+                /* TO DTO WITH FULL USER */
+                @Test
+                @DisplayName("Should map User entity to UserDTO with all fields")
+                void shouldMapUserToDto_WithAllFields() {
+                        /* ARRANGE */
+                        User user = User.builder()
+                                        .id(1L)
+                                        .firstName("Jean")
+                                        .lastName("Dupont")
+                                        .login("jean.dupont@example.com")
+                                        .password("P@ssw0rd!")
+                                        .build();
+
+                        /* ACT */
+                        UserDTO dto = userDtoMapper.toDto(user);
+
+                        /* ASSERT */
+                        assertEquals(1L, dto.getId());
+                        assertEquals("Jean", dto.getFirstName());
+                        assertEquals("Dupont", dto.getLastName());
+                        assertEquals("jean.dupont@example.com", dto.getLogin());
+                }
+
+                /* TO DTO WITH NULL */
+                @Test
+                @DisplayName("Should return null when User is null")
+                void shouldReturnNull_WhenUserIsNull() {
+                        /* ACT */
+                        UserDTO dto = userDtoMapper.toDto(null);
+
+                        /* ASSERT */
+                        assertEquals(null, dto);
                 }
         }
 

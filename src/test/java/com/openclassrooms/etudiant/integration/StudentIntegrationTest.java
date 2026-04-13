@@ -160,6 +160,32 @@ class StudentIntegrationTest {
             assertEquals(1, studentRepository.count());
         }
 
+        // : retour 400 sur email dupliqué non couvert en
+        // intégration
+        @Test
+        @DisplayName("Should return 400 when creating student with duplicate email")
+        void shouldReturn400_WhenEmailAlreadyExists() throws Exception {
+            /* ARRANGE - create first student */
+            String token = getAuthorizationHeader();
+            StudentDTO firstStudent = buildValidStudent("duplicate.email@example.com");
+            mockMvc.perform(post("/api/students")
+                    .header("Authorization", token)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(firstStudent)))
+                    .andExpect(status().isCreated());
+
+            /* ACT AND ASSERT 400 BAD REQUEST on second student with same email */
+            mockMvc.perform(post("/api/students")
+                    .header("Authorization", token)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(firstStudent)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.errorCode").value("INVALID_ARGUMENT"));
+
+            /* ASSERT only one student was persisted */
+            assertEquals(1, studentRepository.count());
+        }
+
         /* CREATE WITHOUT TOKEN → 401 */
         @Test
         @DisplayName("Should return 401 when creating student without token")
@@ -204,6 +230,21 @@ class StudentIntegrationTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.email").value("retrieve.me@example.com"))
                     .andExpect(jsonPath("$.city").value("Paris"));
+        }
+
+        // : retour 404 sur ID inexistant non couvert en
+        // intégration
+        @Test
+        @DisplayName("Should return 404 when student ID does not exist")
+        void shouldReturn404_WhenStudentNotFound() throws Exception {
+            /* ARRANGE */
+            String token = getAuthorizationHeader();
+
+            /* ACT AND ASSERT 404 NOT FOUND - no student with ID 9999 */
+            mockMvc.perform(get("/api/students/9999")
+                    .header("Authorization", token))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.errorCode").value("ENTITY_NOT_FOUND"));
         }
     }
 }

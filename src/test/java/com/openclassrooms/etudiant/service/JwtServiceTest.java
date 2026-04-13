@@ -117,6 +117,16 @@ class JwtServiceTest {
             assertEquals("jean.dupont@example.com", username);
         }
 
+        // : branche token malformé dans extractUsername() non
+        // couverte
+        @Test
+        @DisplayName("Should throw JwtException when token is malformed")
+        void shouldThrowJwtException_WhenTokenIsMalformed() {
+            /* ACT & ASSERT - JJWT throws MalformedJwtException (extends JwtException) */
+            assertThrows(io.jsonwebtoken.JwtException.class,
+                    () -> jwtService.extractUsername("not.a.valid.jwt", false));
+        }
+
         @Test
         @DisplayName("Should extract correct username from refresh token")
         void shouldExtractUsername_FromRefreshToken() {
@@ -186,6 +196,25 @@ class JwtServiceTest {
 
             /* ASSERT */
             assertFalse(result);
+        }
+
+        // : branche signature invalide (mauvaise clé) dans
+        // isTokenValid() non couverte
+        @Test
+        @DisplayName("Should throw SignatureException when token is validated with wrong signing key")
+        void shouldThrowSignatureException_WhenTokenSignedWithWrongKey() {
+            /*
+             * ARRANGE - generate access token but attempt to validate it as a refresh token
+             * (wrong key)
+             */
+            String accessToken = jwtService.generateToken(testUserDetails, false);
+
+            /*
+             * ACT & ASSERT - refresh key ≠ access key → SignatureException (extends
+             * JwtException)
+             */
+            assertThrows(io.jsonwebtoken.security.SignatureException.class,
+                    () -> jwtService.isTokenValid(accessToken, testUserDetails, true));
         }
 
         @Test

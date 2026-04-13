@@ -1,4 +1,4 @@
-package com.openclassrooms.etudiant.enums;
+package com.openclassrooms.etudiant.messages;
 
 /**
  * Error messages for global exception handling.

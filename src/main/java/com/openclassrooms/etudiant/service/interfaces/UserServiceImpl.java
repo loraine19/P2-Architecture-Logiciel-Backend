@@ -23,4 +23,5 @@ public interface UserServiceImpl {
 
     MessageResp refresh(String refreshToken, HttpServletRequest request, HttpServletResponse response);
 
+    MessageResp deletTestUser(String login);
 }
